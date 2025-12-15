@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TextInput from "../components/TextInput.jsx";
+import TextInput from "../components/TextInput";
 
 const CompanyRegister = () => {
   const [form, setForm] = useState({
@@ -36,15 +36,11 @@ const CompanyRegister = () => {
       newErrors.confirmPassword = "Confirm password is required";
 
     if (
-      form.password.trim() &&
-      form.confirmPassword.trim() &&
+      form.password &&
+      form.confirmPassword &&
       form.password !== form.confirmPassword
     ) {
       newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    if (form.contactNo && form.contactNo.length < 10) {
-      newErrors.contactNo = "Contact number looks too short";
     }
 
     setErrors(newErrors);
@@ -55,100 +51,113 @@ const CompanyRegister = () => {
     e.preventDefault();
     if (!validate()) return;
 
-    // TODO: API call later: POST /api/company/register
     console.log("Company Registration:", form);
-    alert("Company registration form submitted (frontend only now)");
+    alert("Company registered (frontend only)");
   };
 
   return (
-    <div className="page-container">
-      <div className="card">
-        <h2>Company Registration</h2>
-        <p className="card-subtitle">
-          Register your company to hire from colleges via CampusHire.
-        </p>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <TextInput
-            label="Company Name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Enter company name"
-            required
-            error={errors.name}
-          />
+    <div className="auth-page">
+      <div className="auth-center">
+        <div className="register-card">
 
-          <TextInput
-            label="Address"
-            name="address"
-            value={form.address}
-            onChange={handleChange}
-            placeholder="Enter company address"
-            required
-            error={errors.address}
-          />
+          {/* Header */}
+          <div className="register-header">
+            <div className="register-icon">🏢</div>
+            <h2>Company Register</h2>
+            <p>Create a new company account to get started</p>
+          </div>
 
-          <TextInput
-            label="Email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="Enter official email"
-            required
-            error={errors.email}
-          />
+          {/* Form */}
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="register-grid">
+              <TextInput
+                label="Company Name"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="e.g. Odoo India"
+                required
+                error={errors.name}
+              />
 
-          <TextInput
-            label="Registration Number"
-            name="registrationNo"
-            value={form.registrationNo}
-            onChange={handleChange}
-            placeholder="Enter company registration number"
-            required
-            error={errors.registrationNo}
-          />
+              <TextInput
+                label="Registration Number"
+                name="registrationNo"
+                value={form.registrationNo}
+                onChange={handleChange}
+                placeholder="Enter registration number"
+                required
+                error={errors.registrationNo}
+              />
 
-          <TextInput
-            label="Contact Number"
-            name="contactNo"
-            value={form.contactNo}
-            onChange={handleChange}
-            placeholder="Enter contact number"
-            required
-            error={errors.contactNo}
-          />
+              <TextInput
+                label="Email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Enter official email"
+                required
+                error={errors.email}
+              />
 
-          <TextInput
-            label="Password"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Create a password"
-            required
-            error={errors.password}
-          />
+              <TextInput
+                label="Contact Number"
+                name="contactNo"
+                value={form.contactNo}
+                onChange={handleChange}
+                placeholder="+91XXXXXXXXXX"
+                required
+                error={errors.contactNo}
+              />
 
-          <TextInput
-            label="Confirm Password"
-            name="confirmPassword"
-            type="password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            placeholder="Re-enter password"
-            required
-            error={errors.confirmPassword}
-          />
+              <div className="register-full">
+                <TextInput
+                  label="Address"
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="Enter company address"
+                  required
+                  error={errors.address}
+                />
+              </div>
 
-          <button type="submit" className="btn-primary">
-            Register Company
-          </button>
-        </form>
+              <TextInput
+                label="Password"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Create a password"
+                required
+                error={errors.password}
+              />
+
+              <TextInput
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                placeholder="Re-enter password"
+                required
+                error={errors.confirmPassword}
+              />
+            </div>
+
+            <div className="register-footer">
+              <button type="submit" className="btn-primary">
+                Register Company
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
+
 };
 
 export default CompanyRegister;

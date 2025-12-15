@@ -11,10 +11,11 @@ const TextInput = ({
   error,
 }) => {
   return (
-    <div className="form-group">
+    <div className="form-group auth-form-group">
       <label className="form-label">
         {label} {required && <span className="required">*</span>}
       </label>
+
       <input
         className={`form-input ${error ? "input-error" : ""}`}
         type={type}
@@ -24,9 +25,11 @@ const TextInput = ({
         placeholder={placeholder}
         required={required}
       />
+
       {error && <p className="error-text">{error}</p>}
     </div>
   );
+
 };
 
 export default TextInput;

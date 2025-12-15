@@ -9,12 +9,19 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
+      {/* Left */}
       <div className="nav-left">
         <span className="logo-text">CampusHire</span>
       </div>
+
+      {/* Right */}
       <div className="nav-right">
         <Link to="/login" className={isActive("/login")}>
           Login
+        </Link>
+
+        <Link to="/register/college" className="nav-link nav-register">
+          Register
         </Link>
       </div>
     </nav>

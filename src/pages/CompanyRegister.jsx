@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import TextInput from "../components/TextInput";
+import TextInput from "../components/TextInput.jsx";
+import { useNavigate } from "react-router-dom";
 
 const CompanyRegister = () => {
+  const navigate=useNavigate()
   const [form, setForm] = useState({
     name: "",
     address: "",
@@ -47,12 +49,49 @@ const CompanyRegister = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    console.log("Company Registration:", form);
-    alert("Company registered (frontend only)");
+    try {
+      
+      const res = await fetch("http://localhost:5000/api/auth/register/company", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(form)
+      });
+
+      const data = await res.json();  // <-- IMPORTANT
+
+      if (!res.ok) {
+        console.error("Error:", data);
+        alert(data.message || "Registration failed");
+        return;
+      }
+
+      console.log("company Registration Success:", data);
+      alert("company registered successfully!");
+
+      setForm({
+        name: "",
+        address: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        registrationNo: "",
+        contactNo: "",
+      });
+
+    // 2️⃣ Redirect to login page
+      navigate("/login", { replace: true });
+
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Something went wrong!");
+    }
   };
 
   return (

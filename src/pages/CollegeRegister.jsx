@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import TextInput from "../components/TextInput";
+import TextInput from "../components/TextInput.jsx";
+import { useNavigate } from "react-router-dom";
+
 
 const CollegeRegister = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
     address: "",
@@ -50,8 +53,45 @@ const CollegeRegister = () => {
     e.preventDefault();
     if (!validate()) return;
 
-    console.log("College Registration:", form);
-    alert("College registered (frontend only)");
+    try {
+      console.log(CollegeRegister);
+      
+      const res = await fetch("http://localhost:5000/api/auth/register/college", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(form)
+      });
+
+      const data = await res.json();  // <-- IMPORTANT
+
+      if (!res.ok) {
+        console.error("Error:", data);
+        alert(data.message || "Registration failed");
+        return;
+      }
+
+      console.log("College Registration Success:", data);
+      alert("College registered successfully!");
+
+      setForm({
+        name: "",
+        address: "",
+        email: "",
+        phone: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+    // 2️⃣ Redirect to login page
+      navigate("/login", { replace: true });
+
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Something went wrong!");
+    }
   };
 
   return (

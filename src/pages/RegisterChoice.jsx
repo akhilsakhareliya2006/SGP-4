@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import companyImg from "../assets/company.jpg";
+import collegeImg from "../assets/college.jpg";
 
 const RegisterChoice = () => {
     return (
@@ -13,12 +15,12 @@ const RegisterChoice = () => {
 
                     <div className="choice-grid">
                         <Link to="/register/company" className="choice-item">
-                            <img src="/src/assets/company.jpg" alt="Company" />
+                            <img src={companyImg} alt="Company" />
                             <span>Register as Company</span>
                         </Link>
 
                         <Link to="/register/college" className="choice-item">
-                            <img src="/src/assets/college.jpg" alt="College" />
+                            <img src={collegeImg} alt="College" />
                             <span>Register as College</span>
                         </Link>
                     </div>

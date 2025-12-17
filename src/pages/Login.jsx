@@ -1,9 +1,17 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TextInput from "../components/TextInput";
 
 
 const Login = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // TODO: replace with real login + role-based redirect
+    navigate("/dashboard/employees");
+  };
+
   return (
     <div className="auth-page">
       {/* Navbar */}
@@ -23,7 +31,7 @@ const Login = () => {
 
       {/* Centered Card */}
       <div className="auth-center">
-        <div className="auth-card">
+        <form className="auth-card" onSubmit={handleSubmit}>
           <div className="auth-logo">
             <img src="/src/assets/logo.png" alt="CampusHire Logo" />
           </div>
@@ -49,7 +57,9 @@ const Login = () => {
 
           <div className="auth-forgot">Forgot password?</div>
 
-          <button className="auth-btn">Sign in</button>
+          <button type="submit" className="auth-btn">
+            Sign in
+          </button>
 
           <p className="auth-footer">
             Don’t have an account?{" "}
@@ -58,7 +68,7 @@ const Login = () => {
             </Link>
           </p>
 
-        </div>
+        </form>
       </div>
     </div>
   );

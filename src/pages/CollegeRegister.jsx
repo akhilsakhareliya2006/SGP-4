@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import TextInput from "../components/TextInput.jsx";
 import { useNavigate } from "react-router-dom";
 
-
 const CollegeRegister = () => {
   const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: "",
     address: "",
@@ -15,6 +15,7 @@ const CollegeRegister = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({
@@ -30,8 +31,9 @@ const CollegeRegister = () => {
     if (!form.address.trim()) newErrors.address = "Address is required";
     if (!form.email.trim()) newErrors.email = "Email is required";
     if (!form.password.trim()) newErrors.password = "Password is required";
-    if (!form.confirmPassword.trim())
+    if (!form.confirmPassword.trim()) {
       newErrors.confirmPassword = "Confirm password is required";
+    }
 
     if (
       form.password &&
@@ -49,31 +51,32 @@ const CollegeRegister = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!validate()) return;
 
     try {
-      console.log(CollegeRegister);
-      
-      const res = await fetch("http://localhost:5000/api/auth/register/college", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(form)
-      });
+      setLoading(true);
 
-      const data = await res.json();  // <-- IMPORTANT
+      const res = await fetch(
+        "http://localhost:5000/api/auth/register/college",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(form),
+        }
+      );
+
+      const data = await res.json();
 
       if (!res.ok) {
-        console.error("Error:", data);
         alert(data.message || "Registration failed");
         return;
       }
 
-      console.log("College Registration Success:", data);
       alert("College registered successfully!");
 
       setForm({
@@ -85,110 +88,104 @@ const CollegeRegister = () => {
         confirmPassword: "",
       });
 
-    // 2️⃣ Redirect to login page
       navigate("/login", { replace: true });
-
     } catch (error) {
       console.error("Network error:", error);
       alert("Something went wrong!");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-  <div className="auth-page">
-    <div className="auth-center">
-      <div className="register-card">
+    <div className="auth-page">
+      <div className="auth-center">
+        <div className="register-card">
+          {/* Header */}
+          <div className="register-header">
+            <div className="register-icon">🎓</div>
+            <h2>College Register</h2>
+            <p>Create a new college account to collaborate with companies</p>
+          </div>
 
-        {/* Header */}
-        <div className="register-header">
-          <div className="register-icon">🎓</div>
-          <h2>College Register</h2>
-          <p>Create a new college account to collaborate with companies</p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="register-grid">
-
-            <TextInput
-              label="College Name"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Enter college name"
-              required
-              error={errors.name}
-            />
-
-            <TextInput
-              label="Email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="Enter official email"
-              required
-              error={errors.email}
-            />
-
-            <div className="register-full">
+          {/* Form */}
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="register-grid">
               <TextInput
-                label="Address"
-                name="address"
-                value={form.address}
+                label="College Name"
+                name="name"
+                value={form.name}
                 onChange={handleChange}
-                placeholder="Enter college address"
+                placeholder="Enter college name"
                 required
-                error={errors.address}
+                error={errors.name}
+              />
+
+              <TextInput
+                label="Email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Enter official email"
+                required
+                error={errors.email}
+              />
+
+              <div className="register-full">
+                <TextInput
+                  label="Address"
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="Enter college address"
+                  required
+                  error={errors.address}
+                />
+              </div>
+
+              <TextInput
+                label="Phone (optional)"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="+91XXXXXXXXXX"
+                error={errors.phone}
+              />
+
+              <TextInput
+                label="Password"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Create a password"
+                required
+                error={errors.password}
+              />
+
+              <TextInput
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                placeholder="Re-enter password"
+                required
+                error={errors.confirmPassword}
               />
             </div>
 
-            <TextInput
-              label="Phone (optional)"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="+91XXXXXXXXXX"
-              error={errors.phone}
-            />
-
-            <TextInput
-              label="Password"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Create a password"
-              required
-              error={errors.password}
-            />
-
-            <TextInput
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              placeholder="Re-enter password"
-              required
-              error={errors.confirmPassword}
-            />
-
-          </div>
-
-          <div className="register-footer">
-            <button type="submit" className="btn-primary">
-              Register College
-            </button>
-          </div>
-        </form>
-
+            <div className="register-footer">
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? "Registering..." : "Register College"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
-);
-
-
+  );
 };
 
 export default CollegeRegister;

@@ -1,5 +1,5 @@
 import Navbar from "./components/Navbar";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Login from "./pages/Login";
 import CollegeRegister from "./pages/CollegeRegister";
@@ -13,10 +13,13 @@ import CollaborationPage from "./pages/dashboard/CollaborationPage";
 import AdminSettingsPage from "./pages/dashboard/AdminSettingsPage";
 
 function App() {
+  const location = useLocation();
+  const isDashboardRoute = location.pathname.startsWith("/dashboard");
+
   return (
     <>
-      {/* Navbar ALWAYS at top */}
-      <Navbar />
+      {/* Navbar only on auth / public pages */}
+      {!isDashboardRoute && <Navbar />}
 
       {/* Pages below navbar */}
       <Routes>
@@ -45,4 +48,5 @@ function App() {
 }
 
 export default App;
+
 

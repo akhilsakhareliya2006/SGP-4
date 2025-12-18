@@ -1,4 +1,4 @@
-/* Root layout */
+/* ok */
 .dashboard-root {
   display: flex;
   min-height: 100vh;
@@ -9,6 +9,10 @@
 
 .sidebar-closed .sidebar {
   transform: translateX(-100%);
+  width: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
 }
 
 .sidebar-closed .main-content {
@@ -139,6 +143,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative;
+  cursor: pointer;
 }
 
 .topbar-avatar {
@@ -162,6 +168,33 @@
 .topbar-role {
   font-size: 12px;
   color: #6b7280;
+}
+
+.user-menu {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 6px 0;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+  min-width: 140px;
+  z-index: 20;
+}
+
+.user-menu-item {
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.user-menu-item:hover {
+  background-color: #f3f4ff;
 }
 
 .content-wrapper {
@@ -300,22 +333,24 @@
 }
 
 .employee-info {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .employee-name {
   font-weight: 600;
+  font-size: 15px;
 }
 
 .employee-email {
   color: #6b7280;
-  margin-top: 2px;
+  margin-top: 4px;
+  font-size: 14px;
 }
 
 .employee-id {
   color: #9ca3af;
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: 6px;
+  font-size: 13px;
 }
 
 /* List view */

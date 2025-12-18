@@ -5,6 +5,7 @@ import "../dashboard.css";
 
 function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const navClass = ({ isActive }) =>
     isActive ? "nav-item nav-item-active" : "nav-item";
@@ -35,7 +36,7 @@ function DashboardLayout() {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/dashboard/employees" className={navClass}>
+          <NavLink to="/dashboard" end className={navClass}>
             Dashboard
           </NavLink>
           <NavLink to="/dashboard/employees" className={navClass}>
@@ -71,12 +72,29 @@ function DashboardLayout() {
             )}
           </div>
 
-          <div className="topbar-user">
+          <div
+            className="topbar-user"
+            onClick={() => setUserMenuOpen((prev) => !prev)}
+          >
             <span className="topbar-avatar">AD</span>
             <div className="topbar-user-info">
               <div className="topbar-name">Name</div>
               <div className="topbar-role">Admin</div>
             </div>
+            {userMenuOpen && (
+              <div className="user-menu">
+                <button
+                  type="button"
+                  className="user-menu-item"
+                  onClick={() => {
+                    // TODO: add real sign-out logic later
+                    window.location.href = "/login";
+                  }}
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </header>
 

@@ -42,7 +42,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  background: #092346;
+  background: #09254d;
   color: white;
 }
 
@@ -387,6 +387,9 @@ body {
   width: 100%;
   padding: 14px;
   font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center the button text */
 }
 
 /* Responsive */

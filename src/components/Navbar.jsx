@@ -20,7 +20,7 @@ const Navbar = () => {
           Login
         </Link>
 
-        <Link to="/register/college" className="nav-link nav-register">
+        <Link to="/register" className="nav-link nav-register">
           Register
         </Link>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import companyLogo from "../assets/H_logo.png";
 import "../dashboard.css";
@@ -6,6 +6,26 @@ import "../dashboard.css";
 function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const [company,setCompany]=useState(null)
+  
+  useEffect(()=>{
+    const fetchUser = async()=>{
+      const res=await fetch("http://localhost:5000/api/auth/me",{
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials:"include"
+      })
+      
+      const data = await res.json();
+      setCompany(data.data)
+    } 
+    fetchUser()
+  },[])
+  
+
 
   const navClass = ({ isActive }) =>
     isActive ? "nav-item nav-item-active" : "nav-item";
@@ -22,7 +42,7 @@ function DashboardLayout() {
           <div className="sidebar-logo">
             <img src={companyLogo} alt="Company logo" />
             <div className="sidebar-company-meta">
-              <span className="sidebar-company-name">XYZ Name </span>
+              <span className="sidebar-company-name">{`${company.name}`} </span>
               <span className="sidebar-company-role">Company</span>
             </div>
           </div>

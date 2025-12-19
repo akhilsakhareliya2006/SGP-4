@@ -43,6 +43,7 @@ const Login = () => {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials:"include",
         body: JSON.stringify(form),
       });
 
@@ -53,10 +54,10 @@ const Login = () => {
         return;
       }
 
-      alert("Login successful!");
-
       // later: store token
-      navigate("/dashboard/employees");
+      const role=data.data.user.role;
+      if(role==="companyAdmin") navigate("/dashboard/employees");
+    
     } catch (error) {
       console.error("Login error:", error);
       alert("Something went wrong!");

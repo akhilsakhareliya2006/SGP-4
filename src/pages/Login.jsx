@@ -55,8 +55,7 @@ const Login = () => {
       }
 
       // later: store token
-      const role=data.data.user.role;
-      if(role==="companyAdmin") navigate("/dashboard/employees");
+      navigate("/dashboard/employees");
     
     } catch (error) {
       console.error("Login error:", error);

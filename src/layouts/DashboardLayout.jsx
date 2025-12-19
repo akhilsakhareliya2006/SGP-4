@@ -42,7 +42,7 @@ function DashboardLayout() {
           <div className="sidebar-logo">
             <img src={companyLogo} alt="Company logo" />
             <div className="sidebar-company-meta">
-              <span className="sidebar-company-name">{`${company.name}`} </span>
+              <span className="sidebar-company-name">Name </span>
               <span className="sidebar-company-role">Company</span>
             </div>
           </div>
@@ -106,8 +106,19 @@ function DashboardLayout() {
                 <button
                   type="button"
                   className="user-menu-item"
-                  onClick={() => {
-                    // TODO: add real sign-out logic later
+                  onClick={async() => {
+                    const res = await fetch("http://localhost:5000/api/auth/logout", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      credentials:"include",
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                      alert(data.message || "Logout failed");
+                      return;
+                    }
                     window.location.href = "/login";
                   }}
                 >

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import companyLogo from "../assets/H_logo.png";
-import "../dashboard.css";
-import logoutIcon from "../assets/icons/logout.png";
-
+import companyLogo from "../../assets/images/H_logo.png";
+import "../../dashboard.css";
+import logoutIcon from "../../assets/icons/logout.png";
 
 
 

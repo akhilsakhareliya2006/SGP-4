@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import companyImg from "../assets/company.jpg";
-import collegeImg from "../assets/college.jpg";
+import companyImg from "../../assets/images/company.jpg";
+import collegeImg from "../../assets/images/college.jpg";
+
 
 const RegisterChoice = () => {
     return (

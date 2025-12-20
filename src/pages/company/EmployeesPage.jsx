@@ -3,7 +3,6 @@ import gridIcon from "../../assets/icons/grid.png";
 import listIcon from "../../assets/icons/list.png";
 import exportIcon from "../../assets/icons/export.png";
 
-
 const MOCK_EMPLOYEES = [
   { id: "EMP001", name: "Jennifer Martinez", email: "jennifer@workzen.com" },
   { id: "EMP002", name: "Robert Taylor", email: "robert@workzen.com" },
@@ -23,6 +22,7 @@ function getInitials(name) {
 function EmployeesPage() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState("grid"); // grid | list
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const filteredEmployees = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -51,8 +51,12 @@ function EmployeesPage() {
             <span className="export-text">Export</span>
           </button>
 
-
-          <button className="btn-primary">+ Add Employee</button>
+          <button
+            className="btn-primary"
+            onClick={() => setShowAddModal(true)}
+          >
+            + Add Employee
+          </button>
         </div>
       </div>
 
@@ -141,7 +145,57 @@ function EmployeesPage() {
         </table>
       )}
 
+      {/* ===== Add Employee Modal ===== */}
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <div>
+                <h3>Add New Employee</h3>
+                <p className="modal-subtitle">
+                  Fill in the details to create a new employee record.
+                </p>
+              </div>
+              <button
+                className="modal-close"
+                onClick={() => setShowAddModal(false)}
+              >
+                ✕
+              </button>
+            </div>
 
+            <form className="modal-form">
+              <div className="form-group">
+                <label>Full Name</label>
+                <input type="text" required />
+              </div>
+
+              <div className="form-group">
+                <label>Email</label>
+                <input type="email" required />
+              </div>
+
+              <div className="form-group">
+                <label>Hire Date</label>
+                <input type="date" required />
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Create Employee
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

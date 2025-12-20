@@ -1,16 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import gridIcon from "../../assets/icons/grid.png";
 import listIcon from "../../assets/icons/list.png";
 import exportIcon from "../../assets/icons/export.png";
 
-const MOCK_EMPLOYEES = [
-  { id: "EMP001", name: "Jennifer Martinez", email: "jennifer@workzen.com" },
-  { id: "EMP002", name: "Robert Taylor", email: "robert@workzen.com" },
-  { id: "EMP003", name: "Lisa Anderson", email: "lisa@workzen.com" },
-  { id: "EMP004", name: "David Wilson", email: "david@workzen.com" },
-];
-
 function getInitials(name) {
+  if (!name) return "";
   return name
     .split(" ")
     .filter(Boolean)
@@ -23,16 +17,54 @@ function EmployeesPage() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState("grid"); // grid | list
   const [showAddModal, setShowAddModal] = useState(false);
+  // 1. Initialize as empty array [] instead of null to avoid render errors
+  const [employees, setEmployees] = useState([]); 
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/company/employees", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        // Ensure we are mapping over an array (safety check)
+        if (data && Array.isArray(data.data)) {
+          const formattedEmployees = data.data.map((employee) => ({
+            id: employee.id,
+            // Safety check for nested user object
+            name: employee.user?.name || "Unknown",
+            email: employee.user?.email || "No Email",
+          }));
+          console.log(formattedEmployees);
+          setEmployees(formattedEmployees);
+        }
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
 
   const filteredEmployees = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return MOCK_EMPLOYEES;
-    return MOCK_EMPLOYEES.filter((emp) =>
+    if (!q) return employees;
+    
+    // 2. Filter the real 'employees' state, not MOCK_EMPLOYEES
+    return employees.filter((emp) =>
       [emp.name, emp.email, emp.id].some((field) =>
-        field.toLowerCase().includes(q)
+        String(field).toLowerCase().includes(q)
       )
     );
-  }, [search]);
+  }, [search, employees]);
 
   return (
     <div className="employees-page">
@@ -90,59 +122,65 @@ function EmployeesPage() {
       </div>
 
       {/* ===== Employees Content ===== */}
-      {viewMode === "grid" ? (
-        <div className="employees-grid">
-          {filteredEmployees.map((emp) => (
-            <div key={emp.id} className="employee-card">
-              <div className="employee-avatar">
-                {getInitials(emp.name)}
-              </div>
-              <div className="employee-info">
-                <div className="employee-name">{emp.name}</div>
-                <div className="employee-email">{emp.email}</div>
-                <div className="employee-id">ID: {emp.id}</div>
-              </div>
-            </div>
-          ))}
-
-          {filteredEmployees.length === 0 && (
-            <div className="empty-state">No employees found.</div>
-          )}
-        </div>
+      {isLoading ? (
+        <div className="loading-state">Loading employees...</div>
       ) : (
-        <table className="employees-table">
-          <thead>
-            <tr>
-              <th>Employee</th>
-              <th>Email</th>
-              <th>ID</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.map((emp) => (
-              <tr key={emp.id}>
-                <td>
-                  <div className="table-employee">
-                    <span className="table-avatar">
-                      {getInitials(emp.name)}
-                    </span>
-                    <span>{emp.name}</span>
+        <>
+          {viewMode === "grid" ? (
+            <div className="employees-grid">
+              {filteredEmployees.map((emp) => (
+                <div key={emp.id} className="employee-card">
+                  <div className="employee-avatar">
+                    {getInitials(emp.name)}
                   </div>
-                </td>
-                <td>{emp.email}</td>
-                <td>{emp.id}</td>
-              </tr>
-            ))}
+                  <div className="employee-info">
+                    <div className="employee-name">{emp.name}</div>
+                    <div className="employee-email">{emp.email}</div>
+                    <div className="employee-id">ID: {emp.id}</div>
+                  </div>
+                </div>
+              ))}
 
-            {filteredEmployees.length === 0 && (
-              <tr>
-                <td colSpan={3} className="empty-state">
-                  No employees found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              {filteredEmployees.length === 0 && (
+                <div className="empty-state">No employees found.</div>
+              )}
+            </div>
+          ) : (
+            <table className="employees-table">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Email</th>
+                  <th>ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEmployees.map((emp) => (
+                  <tr key={emp.id}>
+                    <td>
+                      <div className="table-employee">
+                        <span className="table-avatar">
+                          {getInitials(emp.name)}
+                        </span>
+                        <span>{emp.name}</span>
+                      </div>
+                    </td>
+                    <td>{emp.email}</td>
+                    <td>{emp.id}</td>
+                  </tr>
+                ))}
+
+                {filteredEmployees.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="empty-state">
+                      No employees found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </>
       )}
 
       {/* ===== Add Employee Modal ===== */}

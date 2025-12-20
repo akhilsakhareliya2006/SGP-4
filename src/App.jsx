@@ -1,16 +1,16 @@
 import Navbar from "./components/Navbar";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-import Login from "./pages/Login";
-import CollegeRegister from "./pages/CollegeRegister";
-import CompanyRegister from "./pages/CompanyRegister";
-import RegisterChoice from "./pages/RegisterChoice";
-import DashboardLayout from "./layouts/DashboardLayout";
-import EmployeesPage from "./pages/dashboard/EmployeesPage";
-import JobsPage from "./pages/dashboard/JobsPage";
-import ApplicationsPage from "./pages/dashboard/ApplicationsPage";
-import CollaborationPage from "./pages/dashboard/CollaborationPage";
-import AdminSettingsPage from "./pages/dashboard/AdminSettingsPage";
+import Login from "./pages/auth/Login";
+import CollegeRegister from "./pages/college/CollegeRegister";
+import CompanyRegister from "./pages/company/CompanyRegister";
+import RegisterChoice from "./pages/auth/RegisterChoice";
+import DashboardLayout from "./pages/company/side_nav_bar";
+import EmployeesPage from "./pages/company/EmployeesPage";
+import JobsPage from "./pages/company/JobsPage";
+import ApplicationsPage from "./pages/company/ApplicationsPage";
+import CollaborationPage from "./pages/company/CollaborationPage";
+import AdminSettingsPage from "./pages/company/AdminSettingsPage";
 
 function App() {
   const location = useLocation();

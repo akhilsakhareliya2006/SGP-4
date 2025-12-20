@@ -2,19 +2,22 @@ import React from "react";
 
 const TextInput = ({
   label,
-  type = "text",
   name,
+  type = "text",
   value,
   onChange,
   placeholder,
-  required,
+  required = false,
   error,
 }) => {
   return (
-    <div className="form-group auth-form-group">
-      <label className="form-label">
-        {label} {required && <span className="required">*</span>}
-      </label>
+    <div className="form-group">
+      {label && (
+        <label className="form-label">
+          {label}
+          {required && <span className="required">*</span>}
+        </label>
+      )}
 
       <input
         className={`form-input ${error ? "input-error" : ""}`}
@@ -23,13 +26,11 @@ const TextInput = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        required={required}
       />
 
-      {error && <p className="error-text">{error}</p>}
+      {error && <div className="form-error">{error}</div>}
     </div>
   );
-
 };
 
 export default TextInput;

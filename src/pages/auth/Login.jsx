@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TextInput from "../components/TextInput";
+import TextInput from "../../components/TextInput";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -70,7 +70,7 @@ const Login = () => {
       <div className="auth-center">
         <div className="auth-card">
           <div className="auth-logo">
-            <img src="/src/assets/logo.png" alt="CampusHire Logo" />
+            <img src="/src/assets/images/logo.png" alt="CampusHire Logo" />
           </div>
 
           <h2>Welcome to CampusHire</h2>

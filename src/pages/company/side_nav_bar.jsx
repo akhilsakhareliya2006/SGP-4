@@ -1,30 +1,33 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import companyLogo from "../assets/H_logo.png";
-import "../dashboard.css";
+import companyLogo from "../../assets/images/H_logo.png";
+import "../../dashboard.css";
+import logoutIcon from "../../assets/icons/logout.png";
+
+
 
 function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const [company,setCompany]=useState(null)
-  
-  useEffect(()=>{
-    const fetchUser = async()=>{
-      const res=await fetch("http://localhost:5000/api/auth/me",{
+  const [company, setCompany] = useState(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const res = await fetch("http://localhost:5000/api/auth/me", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials:"include"
+        credentials: "include"
       })
-      
+
       const data = await res.json();
       setCompany(data.data)
-    } 
+    }
     fetchUser()
-  },[])
-  
+  }, [])
+
 
 
   const navClass = ({ isActive }) =>
@@ -32,9 +35,8 @@ function DashboardLayout() {
 
   return (
     <div
-      className={`dashboard-root ${
-        sidebarOpen ? "sidebar-open" : "sidebar-closed"
-      }`}
+      className={`dashboard-root ${sidebarOpen ? "sidebar-open" : "sidebar-closed"
+        }`}
     >
       {/* Sidebar */}
       <aside className="sidebar">
@@ -106,14 +108,16 @@ function DashboardLayout() {
                 <button
                   type="button"
                   className="user-menu-item"
-                  onClick={async() => {
+                  onClick={async (e) => {
+                    e.stopPropagation(); // important
                     const res = await fetch("http://localhost:5000/api/auth/logout", {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
                       },
-                      credentials:"include",
+                      credentials: "include",
                     });
+
                     const data = await res.json();
                     if (!res.ok) {
                       alert(data.message || "Logout failed");
@@ -122,8 +126,15 @@ function DashboardLayout() {
                     window.location.href = "/login";
                   }}
                 >
-                  Sign out
+                  <img
+                    src={logoutIcon}
+                    alt="Logout"
+                    className="user-menu-icon"
+                  />
+
+                  <span>Sign out</span>
                 </button>
+
               </div>
             )}
           </div>

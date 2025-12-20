@@ -1,4 +1,8 @@
 import { useMemo, useState } from "react";
+import gridIcon from "../../assets/icons/grid.png";
+import listIcon from "../../assets/icons/list.png";
+import exportIcon from "../../assets/icons/export.png";
+
 
 const MOCK_EMPLOYEES = [
   { id: "EMP001", name: "Jennifer Martinez", email: "jennifer@workzen.com" },
@@ -18,7 +22,7 @@ function getInitials(name) {
 
 function EmployeesPage() {
   const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
+  const [viewMode, setViewMode] = useState("grid"); // grid | list
 
   const filteredEmployees = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -32,7 +36,7 @@ function EmployeesPage() {
 
   return (
     <div className="employees-page">
-      {/* Header with title and buttons */}
+      {/* ===== Header ===== */}
       <div className="employees-header">
         <div>
           <h2 className="page-title">Employee List</h2>
@@ -40,16 +44,19 @@ function EmployeesPage() {
             View and manage all employees in your organization.
           </p>
         </div>
+
         <div className="header-actions">
-          <button className="btn-outline">
-            <span className="btn-icon">⭳</span>
-            Export
+          <button className="export-btn" title="Export data">
+            <img src={exportIcon} alt="Export" className="export-icon" />
+            <span className="export-text">Export</span>
           </button>
+
+
           <button className="btn-primary">+ Add Employee</button>
         </div>
       </div>
 
-      {/* Search + view toggle */}
+      {/* ===== Search + View Toggle ===== */}
       <div className="employees-toolbar">
         <input
           type="text"
@@ -63,24 +70,29 @@ function EmployeesPage() {
           <button
             className={`toggle-btn ${viewMode === "grid" ? "active" : ""}`}
             onClick={() => setViewMode("grid")}
+            title="Grid view"
           >
-            Grid
+            <img src={gridIcon} alt="Grid view" className="toggle-icon" />
           </button>
+
           <button
             className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
             onClick={() => setViewMode("list")}
+            title="List view"
           >
-            List
+            <img src={listIcon} alt="List view" className="toggle-icon" />
           </button>
         </div>
       </div>
 
-      {/* Employees list */}
+      {/* ===== Employees Content ===== */}
       {viewMode === "grid" ? (
         <div className="employees-grid">
           {filteredEmployees.map((emp) => (
             <div key={emp.id} className="employee-card">
-              <div className="employee-avatar">{getInitials(emp.name)}</div>
+              <div className="employee-avatar">
+                {getInitials(emp.name)}
+              </div>
               <div className="employee-info">
                 <div className="employee-name">{emp.name}</div>
                 <div className="employee-email">{emp.email}</div>
@@ -88,6 +100,7 @@ function EmployeesPage() {
               </div>
             </div>
           ))}
+
           {filteredEmployees.length === 0 && (
             <div className="empty-state">No employees found.</div>
           )}
@@ -106,7 +119,9 @@ function EmployeesPage() {
               <tr key={emp.id}>
                 <td>
                   <div className="table-employee">
-                    <span className="table-avatar">{getInitials(emp.name)}</span>
+                    <span className="table-avatar">
+                      {getInitials(emp.name)}
+                    </span>
                     <span>{emp.name}</span>
                   </div>
                 </td>
@@ -114,6 +129,7 @@ function EmployeesPage() {
                 <td>{emp.id}</td>
               </tr>
             ))}
+
             {filteredEmployees.length === 0 && (
               <tr>
                 <td colSpan={3} className="empty-state">
@@ -124,10 +140,10 @@ function EmployeesPage() {
           </tbody>
         </table>
       )}
+
+
     </div>
   );
 }
 
 export default EmployeesPage;
-
-

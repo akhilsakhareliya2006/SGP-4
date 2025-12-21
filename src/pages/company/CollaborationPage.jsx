@@ -5,27 +5,28 @@ function StatusBadge({ status, onSend }) {
   switch (status) {
     case "NOT_APPLIED":
       return (
-        <button className="btn-primary" onClick={onSend}>
-          + Send Request
+        <button className="status-pill collaborate" onClick={onSend}>
+          Collaborate
         </button>
       );
 
     case "PENDING":
-      return <span className="status pending">⏳ Pending</span>;
+      return <span className="status-pill pending">Pending</span>;
 
     case "APPLIED":
-      return <span className="status applied">📤 Applied</span>;
+      return <span className="status-pill applied">Applied</span>;
 
     case "COLLABORATED":
-      return <span className="status success">✅ Collaborated</span>;
+      return <span className="status-pill completed">Completed</span>;
 
     case "REJECTED":
-      return <span className="status rejected">❌ Rejected</span>;
+      return <span className="status-pill rejected">Rejected</span>;
 
     default:
       return null;
   }
 }
+
 
 /* ---------- Mock Data ---------- */
 const MOCK_COLLEGES = [
@@ -126,6 +127,7 @@ function CollaborationPage() {
               </div>
             </div>
 
+            {/* RIGHT SIDE – STATUS */}
             <div className="college-right">
               <StatusBadge
                 status={college.status}
@@ -134,13 +136,8 @@ function CollaborationPage() {
             </div>
           </div>
         ))}
-
-        {filteredColleges.length === 0 && (
-          <div className="empty-state">
-            No colleges found
-          </div>
-        )}
       </div>
+
     </div>
   );
 }

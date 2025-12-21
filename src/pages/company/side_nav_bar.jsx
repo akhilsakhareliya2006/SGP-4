@@ -182,7 +182,8 @@ function DashboardLayout() {
         </header>
 
         <main className="content-wrapper">
-          <Outlet />
+          {/* 👇 You must pass the context prop here! */}
+          <Outlet context={{ company }} />
         </main>
       </div>
     </div>

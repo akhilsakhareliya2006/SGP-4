@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import TextInput from "../../components/TextInput.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 const CompanyRegister = () => {
+  const { company } = useOutletContext();
+
   const navigate=useNavigate()
   const [form, setForm] = useState({
     name: "",

@@ -2,45 +2,53 @@ import Navbar from "./components/Navbar";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Login from "./pages/auth/Login";
+import RegisterChoice from "./pages/auth/RegisterChoice";
 import CollegeRegister from "./pages/college/CollegeRegister";
 import CompanyRegister from "./pages/company/CompanyRegister";
-import RegisterChoice from "./pages/auth/RegisterChoice";
+
 import DashboardLayout from "./pages/company/side_nav_bar";
 import EmployeesPage from "./pages/company/EmployeesPage";
 import JobsPage from "./pages/company/JobsPage";
 import ApplicationsPage from "./pages/company/ApplicationsPage";
 import CollaborationPage from "./pages/company/CollaborationPage";
 import AdminSettingsPage from "./pages/company/AdminSettingsPage";
+import DashboardPage from "./pages/company/DashboardPage";
 
 function App() {
   const location = useLocation();
-  const isDashboardRoute = location.pathname.startsWith("/dashboard");
+
+  // ✅ Hide navbar on ALL dashboard / sidebar pages
+  const hideNavbar =
+    location.pathname.startsWith("/employee") ||
+    location.pathname.startsWith("/college") ||
+    location.pathname.startsWith("/company") ||
+    location.pathname.startsWith("/dashboard");
 
   return (
     <>
-      {/* Navbar only on auth / public pages */}
-      {!isDashboardRoute && <Navbar />}
+      {/* ✅ Navbar only for auth/public pages */}
+      {!hideNavbar && <Navbar />}
 
-      {/* Pages below navbar */}
       <Routes>
-        {/* Auth routes */}
+        {/* ---------- Auth / Public ---------- */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<RegisterChoice />} />
         <Route path="/register/college" element={<CollegeRegister />} />
         <Route path="/register/company" element={<CompanyRegister />} />
-        <Route path="/register" element={<RegisterChoice />} />
 
-        {/* Dashboard routes */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
+        {/* ---------- Company Dashboard ---------- */}
+        <Route path="/employee" element={<DashboardLayout />}>
           <Route index element={<Navigate to="employees" replace />} />
           <Route path="employees" element={<EmployeesPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="jobs" element={<JobsPage />} />
           <Route path="applications" element={<ApplicationsPage />} />
           <Route path="collaboration" element={<CollaborationPage />} />
           <Route path="admin-settings" element={<AdminSettingsPage />} />
         </Route>
 
-        {/* Fallback */}
+        {/* ---------- Fallback ---------- */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
@@ -48,5 +56,3 @@ function App() {
 }
 
 export default App;
-
-

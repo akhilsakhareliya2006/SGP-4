@@ -316,7 +316,8 @@
   gap: 12px;
   align-items: center;
   justify-content: flex-start;
-  height: 140px; /* makes the card more square */
+  height: 140px;
+  /* makes the card more square */
 }
 
 .employee-avatar {
@@ -362,16 +363,19 @@
   border-radius: 16px;
   overflow: hidden;
   font-size: 13px;
+  
 }
 
 .employees-table th,
 .employees-table td {
+  text-align: center;
   padding: 10px 14px;
   border-bottom: 1px solid #e5e7eb;
   text-align: left;
 }
 
 .employees-table th {
+  text-align: center;
   background: #f3f4f6;
   font-weight: 600;
   font-size: 12px;
@@ -422,7 +426,7 @@
   width: 480px;
   border-radius: 14px;
   padding: 24px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 /* Header */
@@ -479,4 +483,62 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+}
+
+/* Right column alignment */
+.college-right {
+  min-width: 160px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Common pill style */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Button version */
+.status-pill.collaborate {
+  font-size: 16px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.status-pill.collaborate:hover {
+   
+  background: #1d4ed8;
+}
+
+/* Status colors */
+.status-pill.pending {
+  font-size: 16px;
+  background: #fff7ed;
+  color: #d97706;
+}
+
+.status-pill.applied {
+  font-size: 16px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.status-pill.completed {
+  font-size: 16px;
+  background: #ecfdf5;
+  color: #16a34a;
+}
+
+.status-pill.rejected {
+  font-size: 16px;
+  background: #fef2f2;
+  color: #dc2626;
 }

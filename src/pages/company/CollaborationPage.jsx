@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 
 /* ---------- Status Badge ---------- */
 function StatusBadge({ status, onSend }) {
+  const { company } = useOutletContext();
+
   switch (status) {
     case "NOT_APPLIED":
       return (

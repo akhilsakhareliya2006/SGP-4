@@ -38,8 +38,8 @@ function App() {
         <Route path="/register/company" element={<CompanyRegister />} />
 
         {/* ---------- Company Dashboard ---------- */}
-        <Route path="/employee" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="employees" replace />} />
+        <Route path="/company" element={<DashboardLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="employees" element={<EmployeesPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="jobs" element={<JobsPage />} />

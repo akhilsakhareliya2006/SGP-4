@@ -55,7 +55,7 @@ const Login = () => {
       }
 
       // later: store token
-      navigate("/employee/dashboard");
+      navigate("/company");
     
     } catch (error) {
       console.error("Login error:", error);

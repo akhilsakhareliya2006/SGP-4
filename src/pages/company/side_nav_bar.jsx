@@ -1,42 +1,96 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom"; // Added useNavigate
 import companyLogo from "../../assets/images/H_logo.png";
 import "../../dashboard.css";
 import logoutIcon from "../../assets/icons/logout.png";
 
-
+// Helper for dynamic initials
+function getInitials(name) {
+  if (!name) return "CO";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase())
+    .join("");
+}
 
 function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  const [company, setCompany] = useState(null)
+  
+  // 1. Add loading state
+  const [company, setCompany] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
-      const res = await fetch("http://localhost:5000/api/auth/me", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include"
-      })
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/me", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
 
-      const data = await res.json();
-      setCompany(data.data)
+        if (res.ok) {
+          const data = await res.json();
+          setCompany(data.data);
+        } else {
+          // If auth fails (401), redirect to login
+          console.error("Not authenticated");
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+        navigate("/login");
+      } finally {
+        // Stop loading whether success or fail
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [navigate]);
+
+  const handleLogout = async (e) => {
+    e.stopPropagation();
+    try {
+        const res = await fetch("http://localhost:5000/api/auth/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+        });
+
+        if (res.ok) {
+            navigate("/login");
+        } else {
+             alert("Logout failed");
+        }
+    } catch (error) {
+        console.error("Logout error", error);
     }
-    fetchUser()
-  }, [])
-
-
+  };
 
   const navClass = ({ isActive }) =>
     isActive ? "nav-item nav-item-active" : "nav-item";
 
+  // 2. Prevent crash: Show loading or return null until data exists
+  if (isLoading) {
+    return <div className="dashboard-loading">Loading Dashboard...</div>;
+  }
+
+  // Safety check: If loading finished but company is still null (rare error case)
+  if (!company) return null; 
+
   return (
     <div
-      className={`dashboard-root ${sidebarOpen ? "sidebar-open" : "sidebar-closed"
-        }`}
+      className={`dashboard-root ${
+        sidebarOpen ? "sidebar-open" : "sidebar-closed"
+      }`}
     >
       {/* Sidebar */}
       <aside className="sidebar">
@@ -44,8 +98,9 @@ function DashboardLayout() {
           <div className="sidebar-logo">
             <img src={companyLogo} alt="Company logo" />
             <div className="sidebar-company-meta">
-              <span className="sidebar-company-name">Name </span>
-              <span className="sidebar-company-role">Company</span>
+              {/* Safe access to data */}
+              <span className="sidebar-company-name">{company.name}</span>
+              <span className="sidebar-company-role">Company Panel</span>
             </div>
           </div>
           <button
@@ -58,22 +113,22 @@ function DashboardLayout() {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/employee/dashboard" end className={navClass}>
+          <NavLink to="/company/dashboard" end className={navClass}>
             Dashboard
           </NavLink>
-          <NavLink to="/employee/employees" className={navClass}>
+          <NavLink to="/company/employees" className={navClass}>
             Employees
           </NavLink>
-          <NavLink to="/employee/jobs" className={navClass}>
+          <NavLink to="/company/jobs" className={navClass}>
             Jobs
           </NavLink>
-          <NavLink to="/employee/applications" className={navClass}>
+          <NavLink to="/company/applications" className={navClass}>
             Applications
           </NavLink>
-          <NavLink to="/employee/collaboration" className={navClass}>
+          <NavLink to="/company/collaboration" className={navClass}>
             Collaboration
           </NavLink>
-          <NavLink to="/employee/admin-settings" className={navClass}>
+          <NavLink to="/company/admin-settings" className={navClass}>
             Admin Settings
           </NavLink>
         </nav>
@@ -98,43 +153,29 @@ function DashboardLayout() {
             className="topbar-user"
             onClick={() => setUserMenuOpen((prev) => !prev)}
           >
-            <span className="topbar-avatar">AD</span>
+            {/* Dynamic Initials */}
+            <span className="topbar-avatar">{getInitials(company.name)}</span>
+            
             <div className="topbar-user-info">
-              <div className="topbar-name">Name</div>
+              {/* Dynamic Email */}
+              <div className="topbar-name">{company.email}</div>
               <div className="topbar-role">Admin</div>
             </div>
+            
             {userMenuOpen && (
               <div className="user-menu">
                 <button
                   type="button"
                   className="user-menu-item"
-                  onClick={async (e) => {
-                    e.stopPropagation(); // important
-                    const res = await fetch("http://localhost:5000/api/auth/logout", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      credentials: "include",
-                    });
-
-                    const data = await res.json();
-                    if (!res.ok) {
-                      alert(data.message || "Logout failed");
-                      return;
-                    }
-                    window.location.href = "/login";
-                  }}
+                  onClick={handleLogout}
                 >
                   <img
                     src={logoutIcon}
                     alt="Logout"
                     className="user-menu-icon"
                   />
-
                   <span>Sign out</span>
                 </button>
-
               </div>
             )}
           </div>
@@ -149,6 +190,3 @@ function DashboardLayout() {
 }
 
 export default DashboardLayout;
-
-
-

@@ -664,3 +664,128 @@ body {
 input[type="date"] {
   text-transform: uppercase;
 }
+
+.college-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.status {
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status.pending {
+  color: #f59e0b;
+}
+
+.status.applied {
+  color: #3b82f6;
+}
+
+.status.success {
+  color: #16a34a;
+}
+
+.status.rejected {
+  color: #dc2626;
+}
+
+
+.filter-btn.active {
+  background: #2563eb;
+  color: white;
+}
+
+.collab-header {
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.collab-search {
+  width: 100%;
+  max-width: 520px;   
+  padding: 12px 16px;
+  font-size: 14px;
+  border-radius: 50px;
+  border: 1.5px solid #d1d5db;
+  outline: none;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 24px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filter-pill.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+
+.college-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 18px 20px;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+.college-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.college-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.college-name {
+  font-weight: 600;
+}
+
+.college-address {
+  font-size: 13px;
+  color: #6b7280;
+}

@@ -58,22 +58,22 @@ function DashboardLayout() {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/dashboard" end className={navClass}>
+          <NavLink to="/employee/dashboard" end className={navClass}>
             Dashboard
           </NavLink>
-          <NavLink to="/dashboard/employees" className={navClass}>
+          <NavLink to="/employee/employees" className={navClass}>
             Employees
           </NavLink>
-          <NavLink to="/dashboard/jobs" className={navClass}>
+          <NavLink to="/employee/jobs" className={navClass}>
             Jobs
           </NavLink>
-          <NavLink to="/dashboard/applications" className={navClass}>
+          <NavLink to="/employee/applications" className={navClass}>
             Applications
           </NavLink>
-          <NavLink to="/dashboard/collaboration" className={navClass}>
+          <NavLink to="/employee/collaboration" className={navClass}>
             Collaboration
           </NavLink>
-          <NavLink to="/dashboard/admin-settings" className={navClass}>
+          <NavLink to="/employee/admin-settings" className={navClass}>
             Admin Settings
           </NavLink>
         </nav>

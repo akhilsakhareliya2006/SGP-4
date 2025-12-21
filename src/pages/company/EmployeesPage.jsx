@@ -177,8 +177,13 @@ function EmployeesPage() {
 
               <div className="form-group">
                 <label>Hire Date</label>
-                <input type="date" required />
+                <input
+                  type="date"
+                  required
+                  max={new Date().toISOString().split("T")[0]}
+                />
               </div>
+
 
               <div className="modal-footer">
                 <button

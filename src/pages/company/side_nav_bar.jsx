@@ -8,16 +8,17 @@ import logoutIcon from "../../assets/icons/logout.png";
 function getInitials(name) {
   if (!name) return "CO";
   return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((n) => n[0]?.toUpperCase())
-    .join("");
+  .split(" ")
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((n) => n[0]?.toUpperCase())
+  .join("");
 }
 
 function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL
   
   // 1. Add loading state
   const [company, setCompany] = useState(null);
@@ -28,7 +29,7 @@ function DashboardLayout() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
+        const res = await fetch(`${apiUrl}/api/auth/me`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -59,7 +60,7 @@ function DashboardLayout() {
   const handleLogout = async (e) => {
     e.stopPropagation();
     try {
-        const res = await fetch("http://localhost:5000/api/auth/logout", {
+        const res = await fetch(`${apiUrl}/api/auth/logout`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",

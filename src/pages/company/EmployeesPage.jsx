@@ -21,6 +21,8 @@ function EmployeesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const apiUrl = import.meta.env.VITE_API_URL
+
 
   // --- New State for Form Inputs ---
   const [formData, setFormData] = useState({
@@ -33,7 +35,7 @@ function EmployeesPage() {
   // --- Fetch Employees ---
   const fetchEmployees = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/company/employees", {
+      const res = await fetch(`${apiUrl}/api/company/employees`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -64,7 +66,7 @@ function EmployeesPage() {
     setIsCreating(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/company/create/employee", {
+      const res = await fetch(`${apiUrl}/api/company/create/employee`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

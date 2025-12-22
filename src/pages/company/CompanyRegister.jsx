@@ -4,6 +4,8 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 
 const CompanyRegister = () => {
   const { company } = useOutletContext();
+  const apiUrl = import.meta.env.VITE_API_URL
+
 
   const navigate=useNavigate()
   const [form, setForm] = useState({
@@ -57,7 +59,7 @@ const CompanyRegister = () => {
 
     try {
       
-      const res = await fetch("http://localhost:5000/api/auth/register/company", {
+      const res = await fetch(`${apiUrl}/api/auth/register/company`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

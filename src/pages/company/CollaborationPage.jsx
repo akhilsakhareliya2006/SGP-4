@@ -38,6 +38,8 @@ function StatusBadge({ status, onSend, isSending }) {
 function CollaborationPage() {
   // Access company context if needed (e.g. for logging)
   const { company } = useOutletContext();
+  const apiUrl = import.meta.env.VITE_API_URL
+
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL"); // Current active tab
@@ -53,7 +55,7 @@ function CollaborationPage() {
       // UI: "NOT_APPLIED" -> Backend: "not_applied"
       const queryFilter = filter.toLowerCase();
 
-      const res = await fetch(`http://localhost:5000/api/company/college?filter=${queryFilter}`, {
+      const res = await fetch(`${apiUrl}/api/company/college?filter=${queryFilter}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -89,7 +91,7 @@ function CollaborationPage() {
   const handleCollaborate = async (collegeId) => {
     setSendingId(collegeId);
     try {
-      const res = await fetch(`http://localhost:5000/api/company/collab/${collegeId}`, {
+      const res = await fetch(`${apiUrl}/api/company/collab/${collegeId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 
 const CollegeRegister = () => {
   const navigate = useNavigate();
+  const apiUrl = import.meta.env.VITE_API_URL
+
 
   const [form, setForm] = useState({
     name: "",
@@ -61,7 +63,7 @@ const CollegeRegister = () => {
       setLoading(true);
 
       const res = await fetch(
-        "http://localhost:5000/api/auth/register/college",
+        `${apiUrl}/api/auth/register/college`,
         {
           method: "POST",
           headers: {

@@ -153,9 +153,9 @@ function CollaborationPage() {
       <div className="filter-tabs">
         {[
           "ALL",
+          "COLLABORATED",
           "NOT_APPLIED",
           "PENDING",
-          "COLLABORATED",
           "REJECTED",
         ].map((item) => (
           <button

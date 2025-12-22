@@ -32,6 +32,31 @@ function EmployeesPage() {
   });
   const [isCreating, setIsCreating] = useState(false);
 
+  const exportEmployees = async()=>{
+    try {
+      const res=await fetch(`${apiUrl}/api/company/export/employees`, {
+          method: "GET",
+          credentials: "include",
+      })
+      if (!res.ok) throw new Error("Failed to export");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "employees.csv"; // or employees.csv
+      document.body.appendChild(a);
+      a.click();
+
+      // Cleanup
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Error exporting employees:", error);
+    }
+  }
+
   // --- Fetch Employees ---
   const fetchEmployees = async () => {
     try {
@@ -124,8 +149,8 @@ function EmployeesPage() {
         </div>
 
         <div className="header-actions">
-          <button className="export-btn" title="Export data">
-            <img src={exportIcon} alt="Export" className="export-icon" />
+          <button className="export-btn" title="Export data" onClick={()=>exportEmployees()}>
+            <img src={exportIcon} alt="Export" className="export-icon"/>
             <span className="export-text">Export</span>
           </button>
           <button className="btn-primary" onClick={() => setShowAddModal(true)}>

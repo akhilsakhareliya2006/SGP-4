@@ -24,7 +24,8 @@ function MentorsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [mentors, setMentors] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);  //with backend
+  // const [isLoading, setIsLoading] = useState(false);   // for frontend only
   const [isCreating, setIsCreating] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -58,9 +59,10 @@ function MentorsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchMentors();
-  }, []);
+  //comment if using only frontend
+  // useEffect(() => {
+  //   fetchMentors();
+  // }, []);
 
   /* ---------- Create Mentor ---------- */
   const handleCreateMentor = async (e) => {

@@ -368,7 +368,7 @@
 
 .employees-table th,
 .employees-table td {
-  text-align: center;
+  text-align: right;
   padding: 10px 14px;
   border-bottom: 1px solid #e5e7eb;
   text-align: left;

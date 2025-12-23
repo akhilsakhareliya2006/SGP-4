@@ -50,6 +50,8 @@ const Login = () => {
       });
 
       const data = await res.json();
+      console.log(data.data.role);
+      
 
       if (!res.ok) {
         alert(data.message || "Login failed");
@@ -57,7 +59,8 @@ const Login = () => {
       }
 
       // later: store token
-      navigate("/company");
+      if(data.data.role==="companyAdmin") navigate("/company");
+      if(data.data.role==="collegeAdmin") navigate("/college");
     
     } catch (error) {
       console.error("Login error:", error);

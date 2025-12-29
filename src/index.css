@@ -42,7 +42,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  background: #09254d;
+  background: #0b1e44;
   color: white;
 }
 
@@ -270,6 +270,47 @@ body {
 }
 
 
+/* Container spacing */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Common pill style (Login + Register) */
+.nav-pill {
+  padding: 7px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+  text-decoration: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+/* Hover effect */
+.nav-pill:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+/* Active page */
+.nav-pill.active {
+  /* background: #3b82f6; */
+  /* border-color: #3b82f6; */
+  color: #ffffff;
+}
+
+/* Slight emphasis for Register */
+.nav-register {
+  
+  font-weight: 600;
+  background-color: #171950;
+}
+
+
 
 
 
@@ -314,7 +355,7 @@ body {
 .auth-btn {
   width: 100%;
   padding: 12px;
-  background: #2563eb;
+  background: #132a59;
   border: none;
   border-radius: 999px;
   color: white;
@@ -324,7 +365,7 @@ body {
 }
 
 .auth-btn:hover {
-  background: #1e40af;
+  background: #0e30a3;
 }
 
 .auth-footer {
@@ -399,6 +440,7 @@ body {
 .register-footer .btn-primary {
   width: 100%;
   padding: 14px;
+  background-color: #11264e;
   font-size: 16px;
   display: flex;
   align-items: center;
@@ -461,6 +503,7 @@ body {
   flex: 1;
   max-width: 420px;
   background: #f8fafc;
+  
   border-radius: 22px;
   padding: 36px 32px;
   text-decoration: none;
@@ -790,3 +833,7 @@ input[type="date"] {
   color: #6b7280;
 }
 
+.input-error {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}

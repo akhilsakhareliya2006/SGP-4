@@ -16,7 +16,7 @@ function getInitials(name) {
 }
 
 function MentorsPage() {
-  const { college } = useOutletContext(); // 👈 college instead of company
+  const { college } = useOutletContext(); 
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const [search, setSearch] = useState("");
@@ -24,8 +24,8 @@ function MentorsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [mentors, setMentors] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);  //with backend
-  // const [isLoading, setIsLoading] = useState(false);   // for frontend only
+  // const [isLoading, setIsLoading] = useState(true);  //with backend
+  const [isLoading, setIsLoading] = useState(false);   // for frontend only
   const [isCreating, setIsCreating] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -59,7 +59,7 @@ function MentorsPage() {
     }
   };
 
-  //comment if using only frontend
+  // comment if using only frontend
   // useEffect(() => {
   //   fetchMentors();
   // }, []);

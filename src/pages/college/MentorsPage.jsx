@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
+
 import gridIcon from "../../assets/icons/grid.png";
 import listIcon from "../../assets/icons/list.png";
 import exportIcon from "../../assets/icons/export.png";
-import { useOutletContext } from "react-router-dom";
 
 /* ---------- Helpers ---------- */
 function getInitials(name) {
@@ -16,7 +17,7 @@ function getInitials(name) {
 }
 
 function MentorsPage() {
-  const { college } = useOutletContext(); // 👈 college instead of company
+  const { college } = useOutletContext();
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const [search, setSearch] = useState("");
@@ -24,49 +25,51 @@ function MentorsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [mentors, setMentors] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);  //with backend
-  // const [isLoading, setIsLoading] = useState(false);   // for frontend only
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    joinDate: "",
   });
 
   /* ---------- Fetch Mentors ---------- */
   const fetchMentors = async () => {
     try {
+      setIsLoading(true);
       const res = await fetch(`${apiUrl}/api/college/mentors`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok && Array.isArray(data.data)) {
-        const formatted = data.data.map((mentor) => ({
-          id: mentor.id,
-          name: mentor.user?.name || "Unknown",
-          email: mentor.user?.email || "No Email",
-        }));
-        setMentors(formatted);
+        setMentors(
+          data.data.map((mentor) => ({
+            id: mentor.id,
+            name: mentor?.name || "Unknown",
+            email: mentor?.email || "No Email",
+          }))
+        );
       }
-    } catch (error) {
-      console.error("Error fetching mentors:", error);
+    } catch (err) {
+      console.error("Fetch mentors error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  //comment if using only frontend
-  // useEffect(() => {
-  //   fetchMentors();
-  // }, []);
+  useEffect(() => {
+    fetchMentors();
+  }, []);
 
-  /* ---------- Create Mentor ---------- */
+  /* ---------- Create Mentor (FREEZE-SAFE) ---------- */
   const handleCreateMentor = async (e) => {
     e.preventDefault();
+    if (isCreating) return;
+
     setIsCreating(true);
 
     try {
@@ -80,31 +83,65 @@ function MentorsPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-      if (res.ok) {
-        alert("Mentor added successfully");
-        setShowAddModal(false);
-        setFormData({ name: "", email: "", joinDate: "" });
-        fetchMentors();
-      } else {
-        alert(data.message || "Failed to add mentor");
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to add mentor");
       }
-    } catch (error) {
-      console.error("Create mentor error:", error);
-      alert("Something went wrong");
+
+      alert("Mentor added successfully");
+
+      setFormData({ name: "", email: "" });
+      setShowAddModal(false);
+
+      await fetchMentors();
+    } catch (err) {
+      console.error("Create mentor error:", err);
+      alert(err.message || "Something went wrong");
     } finally {
-      setIsCreating(false);
+      setIsCreating(false); // ✅ ALWAYS resets
     }
   };
 
-  /* ---------- Filter ---------- */
+  /* ---------- Reset loading if modal closed ---------- */
+  useEffect(() => {
+    if (!showAddModal) {
+      setIsCreating(false);
+    }
+  }, [showAddModal]);
+
+  const exportMentors = async()=>{
+    try {
+      const res=await fetch(`${apiUrl}/api/college/export/mentors`, {
+          method: "GET",
+          credentials: "include",
+      })
+      if (!res.ok) throw new Error("Failed to export");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mentors.csv"; // or employees.csv
+      document.body.appendChild(a);
+      a.click();
+
+      // Cleanup
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Error exporting mentors:", error);
+    }
+  }
+
+  /* ---------- Search Filter ---------- */
   const filteredMentors = useMemo(() => {
     const q = search.toLowerCase().trim();
     if (!q) return mentors;
     return mentors.filter((m) =>
-      [m.name, m.email, m.id].some((field) =>
-        String(field).toLowerCase().includes(q)
+      [m.name, m.email, m.id].some((f) =>
+        String(f).toLowerCase().includes(q)
       )
     );
   }, [search, mentors]);
@@ -115,7 +152,7 @@ function MentorsPage() {
 
   return (
     <div className="employees-page">
-      {/* Header */}
+      {/* ---------- Header ---------- */}
       <div className="employees-header">
         <div>
           <h2 className="page-title">Mentors</h2>
@@ -126,17 +163,18 @@ function MentorsPage() {
         </div>
 
         <div className="header-actions">
-          <button className="export-btn">
-            <img src={exportIcon} alt="Export" className="export-icon" />
+          <button className="export-btn" onClick={()=>exportMentors()}>
+            <img src={exportIcon} className="export-icon" alt="Export" />
             <span className="export-text">Export</span>
           </button>
+
           <button className="btn-primary" onClick={() => setShowAddModal(true)}>
             + Add Mentor
           </button>
         </div>
       </div>
 
-      {/* Toolbar */}
+      {/* ---------- Toolbar ---------- */}
       <div className="employees-toolbar">
         <input
           className="search-input"
@@ -150,18 +188,19 @@ function MentorsPage() {
             className={`toggle-btn ${viewMode === "grid" ? "active" : ""}`}
             onClick={() => setViewMode("grid")}
           >
-            <img src={gridIcon} className="toggle-icon" />
+            <img src={gridIcon} className="toggle-icon" alt="Grid" />
           </button>
+
           <button
             className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
             onClick={() => setViewMode("list")}
           >
-            <img src={listIcon} className="toggle-icon" />
+            <img src={listIcon} className="toggle-icon" alt="List" />
           </button>
         </div>
       </div>
 
-      {/* Content */}
+      {/* ---------- Content ---------- */}
       {viewMode === "grid" ? (
         <div className="employees-grid">
           {filteredMentors.map((m) => (
@@ -170,7 +209,9 @@ function MentorsPage() {
               <div className="employee-info">
                 <div className="employee-name">{m.name}</div>
                 <div className="employee-email">{m.email}</div>
-                <div className="employee-id">ID: {m.id.slice(0, 8)}...</div>
+                <div className="employee-id">
+                  ID: {m.id.slice(0, 8)}...
+                </div>
               </div>
             </div>
           ))}
@@ -203,13 +244,21 @@ function MentorsPage() {
         </table>
       )}
 
-      {/* Add Mentor Modal */}
+      {/* ---------- Add Mentor Modal ---------- */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h3>Add New Mentor</h3>
-              <button className="modal-close" onClick={() => setShowAddModal(false)}>
+              <div>
+                <h3>Add New Mentor</h3>
+                <p className="modal-subtitle">
+                  College: <strong>{college?.name}</strong>
+                </p>
+              </div>
+              <button
+                className="modal-close"
+                onClick={() => setShowAddModal(false)}
+              >
                 ✕
               </button>
             </div>
@@ -246,7 +295,11 @@ function MentorsPage() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={isCreating}
+                >
                   {isCreating ? "Adding..." : "Add Mentor"}
                 </button>
               </div>

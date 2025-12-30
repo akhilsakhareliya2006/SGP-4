@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import TextInput from "../../components/TextInput.jsx";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const CompanyRegister = () => {
-  const { company } = useOutletContext();
   const apiUrl = import.meta.env.VITE_API_URL
 
 
@@ -99,8 +98,10 @@ const CompanyRegister = () => {
   };
 
   return (
-
+    
+    
     <div className="auth-page">
+
       <div className="auth-center">
         <div className="register-card">
 

@@ -26,6 +26,7 @@ function CollegeDashboardLayout() {
   const navigate = useNavigate();
 
   //frontend only
+  
   useEffect(()=>{
     const fetchCollege=async()=>{
       setCollege({
@@ -68,6 +69,17 @@ function CollegeDashboardLayout() {
   //   fetchCollege();
   // }, [navigate,apiUrl]);
 
+  useEffect(()=>{
+    const fetchCollege=async()=>{
+      setCollege({
+          name:"Charusat",
+          email:"charusat@admin.com"
+      })
+      setIsLoading(false)
+    }
+    fetchCollege()
+  },[])
+  
   /* ---------- Logout ---------- */
   const handleLogout = async (e) => {
     e.stopPropagation();

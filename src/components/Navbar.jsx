@@ -16,14 +16,16 @@ const Navbar = () => {
 
       {/* Right */}
       <div className="nav-right">
-        <Link to="/login" className={isActive("/login")}>
+        <Link to="/login" className="nav-pill">
           Login
         </Link>
 
-        <Link to="/register" className="nav-link nav-register">
+        <Link to="/register" className="nav-pill nav-register">
           Register
         </Link>
       </div>
+
+
     </nav>
   );
 };

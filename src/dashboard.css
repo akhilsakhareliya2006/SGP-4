@@ -363,7 +363,7 @@
   border-radius: 16px;
   overflow: hidden;
   font-size: 13px;
-  
+
 }
 
 .employees-table th,
@@ -514,7 +514,7 @@
 }
 
 .status-pill.collaborate:hover {
-   
+
   background: #1d4ed8;
 }
 
@@ -541,4 +541,93 @@
   font-size: 16px;
   background: #fef2f2;
   color: #dc2626;
+}
+
+/* ---------- Collaboration ---------- */
+.collab-search {
+  max-width: 420px;
+  margin-bottom: 12px;
+}
+
+.collab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.collab-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  padding: 16px 18px;
+  border-radius: 12px;
+}
+
+.collab-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.collab-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e5efff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.collab-name {
+  font-weight: 600;
+}
+
+.collab-address {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.collab-right {
+  min-width: 140px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Status badges */
+
+.request-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.icon.accept {
+  background-color: #e6f4ea;
+  color: #137333;
+}
+
+.icon.reject {
+  background-color: #fdecea;
+  color: #d93025;
+}
+
+.icon:hover {
+  opacity: 0.85;
 }

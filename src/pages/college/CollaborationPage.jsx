@@ -50,7 +50,10 @@ function CollegeCollaborationPage() {
   const { college } = useOutletContext();
 
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("ALL");
+  const [filter, setFilter] = useState("REQUEST");  // by default mate 
+  
+
+
 
   const filteredCompanies = useMemo(() => {
     return MOCK_COMPANIES.filter((c) => {
@@ -91,9 +94,8 @@ function CollegeCollaborationPage() {
         {[, "REQUEST", "COLLABORATED", "REJECTED"].map((item) => (
           <button
             key={item}
-            className={`filter-pill ${
-              filter === item ? "active" : ""
-            }`}
+            className={`filter-pill ${filter === item ? "active" : ""
+              }`}
             onClick={() => setFilter(item)}
           >
             {item}

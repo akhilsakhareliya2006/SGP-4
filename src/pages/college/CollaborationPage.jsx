@@ -71,10 +71,10 @@ function CollegeCollaborationPage() {
       <div className="employees-header">
         <div>
           <h2 className="page-title">Collaboration</h2>
-          <p className="page-subtitle">
+          {/* <p className="page-subtitle">
             Manage collaboration requests for{" "}
             <strong>{college?.name}</strong>
-          </p>
+          </p> */}
         </div>
       </div>
 

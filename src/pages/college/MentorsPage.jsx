@@ -110,11 +110,11 @@ function MentorsPage() {
     }
   }, [showAddModal]);
 
-  const exportMentors = async()=>{
+  const exportMentors = async () => {
     try {
-      const res=await fetch(`${apiUrl}/api/college/export/mentors`, {
-          method: "GET",
-          credentials: "include",
+      const res = await fetch(`${apiUrl}/api/college/export/mentors`, {
+        method: "GET",
+        credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to export");
 
@@ -163,7 +163,7 @@ function MentorsPage() {
         </div>
 
         <div className="header-actions">
-          <button className="export-btn" onClick={()=>exportMentors()}>
+          <button className="export-btn" onClick={() => exportMentors()}>
             <img src={exportIcon} className="export-icon" alt="Export" />
             <span className="export-text">Export</span>
           </button>
@@ -207,12 +207,11 @@ function MentorsPage() {
             <div key={m.id} className="employee-card">
               <div className="employee-avatar">{getInitials(m.name)}</div>
               <div className="employee-info">
+                <div className="employee-id">ID: {m.id.slice(0, 8)}...</div>
                 <div className="employee-name">{m.name}</div>
                 <div className="employee-email">{m.email}</div>
-                <div className="employee-id">
-                  ID: {m.id.slice(0, 8)}...
-                </div>
               </div>
+
             </div>
           ))}
         </div>
@@ -220,27 +219,27 @@ function MentorsPage() {
         <table className="employees-table">
           <thead>
             <tr>
-              <th>Mentor</th>
-              <th>Email</th>
               <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
             </tr>
           </thead>
+
           <tbody>
             {filteredMentors.map((m) => (
               <tr key={m.id}>
+                <td>{m.id.slice(0, 8)}...</td>
                 <td>
                   <div className="table-employee">
-                    <span className="table-avatar">
-                      {getInitials(m.name)}
-                    </span>
+                    <span className="table-avatar">{getInitials(m.name)}</span>
                     <span>{m.name}</span>
                   </div>
                 </td>
                 <td>{m.email}</td>
-                <td>{m.id}</td>
               </tr>
             ))}
           </tbody>
+
         </table>
       )}
 

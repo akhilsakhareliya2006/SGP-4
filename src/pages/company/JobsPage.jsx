@@ -9,6 +9,7 @@ const MOCK_JOBS = [
     salary: "₹15,000",
     dueDate: "2025-02-10",
     createdAt: "2025-01-05",
+    status: "CURRENT",
   },
   {
     id: 2,
@@ -17,6 +18,7 @@ const MOCK_JOBS = [
     salary: "₹25,000",
     dueDate: "2025-03-01",
     createdAt: "2025-01-01",
+    status: "PENDING",
   },
   {
     id: 3,
@@ -25,6 +27,7 @@ const MOCK_JOBS = [
     salary: "₹20,000",
     dueDate: "2024-12-01",
     createdAt: "2024-11-01",
+    status: "PAST",
   },
   {
     id: 4,
@@ -33,6 +36,7 @@ const MOCK_JOBS = [
     salary: "₹30,000",
     dueDate: "2025-01-25",
     createdAt: "2025-01-08",
+    status: "ACCEPTED",
   },
 ];
 
@@ -99,12 +103,7 @@ function CompanyJobsPage() {
               </div>
             </div>
 
-            {/* Right */}
-            <div className="job-status">
-              <span className={`status ${job.status.toLowerCase()}`}>
-                {job.status}
-              </span>
-            </div>
+            
           </div>
         ))}
       </div>

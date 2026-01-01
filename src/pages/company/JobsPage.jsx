@@ -1,32 +1,38 @@
 import { useState, useMemo } from "react";
 
-/* ---------- MOCK DATA ---------- */
+/* ---------- STATIC MOCK DATA ---------- */
 const MOCK_JOBS = [
   {
     id: 1,
     title: "Frontend Developer Intern",
+    company: "TechNova",
     salary: "₹15,000",
     dueDate: "2025-02-10",
     createdAt: "2025-01-05",
-    
+    status: "CURRENT",
   },
   {
     id: 2,
     title: "Backend Developer",
+    company: "InnoSoft",
     salary: "₹25,000",
     dueDate: "2025-03-01",
     createdAt: "2025-01-01",
+    status: "PENDING",
   },
   {
     id: 3,
     title: "UI/UX Designer",
+    company: "PixelWorks",
     salary: "₹20,000",
     dueDate: "2024-12-01",
     createdAt: "2024-11-01",
+    status: "PAST",
   },
   {
     id: 4,
     title: "Data Analyst",
+    company: "DataCorp",
     salary: "₹30,000",
     dueDate: "2025-01-25",
     createdAt: "2025-01-08",
@@ -88,7 +94,7 @@ function CompanyJobsPage() {
 
               <div className="job-info">
                 <h4>{job.title}</h4>
-                {/* <p className="job-company">{job.company}</p> */}
+                <p className="job-company">{job.company}</p>
                 <p>Salary: {job.salary}</p>
                 <p>Due Date: {job.dueDate}</p>
                 <p className="created-at">

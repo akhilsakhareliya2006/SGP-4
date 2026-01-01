@@ -66,6 +66,10 @@ function App() {
           <Route path="admin-settings" element={<CollegeAdminSettingsPage />} />
         </Route>
 
+
+
+        
+
         {/* ---------- Fallback ---------- */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

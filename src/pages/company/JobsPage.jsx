@@ -1,60 +1,55 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 
-/* ---------- STATIC MOCK DATA ---------- */
-const MOCK_JOBS = [
-  {
-    id: 1,
-    title: "Frontend Developer Intern",
-    company: "TechNova",
-    salary: "₹15,000",
-    dueDate: "2025-02-10",
-    createdAt: "2025-01-05",
-    status: "CURRENT",
-  },
-  {
-    id: 2,
-    title: "Backend Developer",
-    company: "InnoSoft",
-    salary: "₹25,000",
-    dueDate: "2025-03-01",
-    createdAt: "2025-01-01",
-    status: "PENDING",
-  },
-  {
-    id: 3,
-    title: "UI/UX Designer",
-    company: "PixelWorks",
-    salary: "₹20,000",
-    dueDate: "2024-12-01",
-    createdAt: "2024-11-01",
-    status: "PAST",
-  },
-  {
-    id: 4,
-    title: "Data Analyst",
-    company: "DataCorp",
-    salary: "₹30,000",
-    dueDate: "2025-01-25",
-    createdAt: "2025-01-08",
-    status: "ACCEPTED",
-  },
-];
 
 function CompanyJobsPage() {
+  const [jobs, setJobs] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("CURRENT");
+  const [loading, setLoading] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
+  // map UI filter -> API filter
+  const filterMap = {
+    CURRENT: "current",
+    PAST: "past",
+    ACCEPTED: "accepted",
+    PENDING: "pending",
+  };
+
+  // 🔹 Fetch jobs from API
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+
+        const res = await fetch(`${apiUrl}/api/company/jobs?filter=${filterMap[filter]}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        const data = await res.json().catch(() => ({}));
+        console.log(data.data);
+        
+        setJobs(data.data); // ApiResponse → data
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [filter]);
+
+  // 🔹 Frontend search
   const filteredJobs = useMemo(() => {
-    return MOCK_JOBS.filter(
-      (job) =>
-        job.status === filter &&
-        job.title.toLowerCase().includes(search.toLowerCase())
+    return jobs.filter((job) =>
+      job.title.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search, filter]);
+  }, [jobs, search]);
 
   return (
     <div className="jobs-page">
-      {/* Header */}
       <h2 className="page-title">Jobs</h2>
 
       {/* Search */}
@@ -80,30 +75,31 @@ function CompanyJobsPage() {
 
       {/* Job List */}
       <div className="jobs-list">
-        {filteredJobs.length === 0 && (
+        {loading && <div className="empty-state">Loading...</div>}
+
+        {!loading && filteredJobs.length === 0 && (
           <div className="empty-state">No jobs found</div>
         )}
 
         {filteredJobs.map((job) => (
           <div key={job.id} className="job-card">
-            {/* Left */}
             <div className="job-left">
               <div className="job-logo">
-                {job.company.charAt(0)}
+                {job.college?.name?.charAt(0)}
               </div>
 
               <div className="job-info">
                 <h4>{job.title}</h4>
-                <p className="job-company">{job.company}</p>
-                <p>Salary: {job.salary}</p>
-                <p>Due Date: {job.dueDate}</p>
+                <p className="job-company">{job.college?.name}</p>
+                <p>Salary: ₹{job.salary}</p>
+                <p>
+                  Due Date: {new Date(job.dueDate).toLocaleDateString()}
+                </p>
                 <p className="created-at">
-                  Created: {job.createdAt}
+                  Created: {new Date(job.createdAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
-
-            
           </div>
         ))}
       </div>

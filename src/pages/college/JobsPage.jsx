@@ -11,7 +11,7 @@ function CollegeJobsPage() {
   const [filter, setFilter] = useState("PENDING");
 
   const [selectedJob, setSelectedJob] = useState(null);
-  const [mentor, setMentor] = useState(""); // mentorId
+  const [mentor, setMentor] = useState("");
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -44,9 +44,11 @@ function CollegeJobsPage() {
     }
   };
 
+  /* 🔴 IMPORTANT FIX: do NOT refetch while modal is open */
   useEffect(() => {
+    if (selectedJob) return;
     fetchJobs();
-  }, [filter, apiUrl]);
+  }, [filter, apiUrl, selectedJob]);
 
   /* ---------------- FETCH MENTORS ---------------- */
   useEffect(() => {
@@ -84,24 +86,38 @@ function CollegeJobsPage() {
     );
   }, [jobs, filter, search]);
 
-  /* ---------------- REJECT JOB (0) ---------------- */
+  /* ---------------- REJECT JOB ---------------- */
   const rejectJobHandler = async (jobId) => {
+    // ✅ 1. Remove job from UI immediately
+    setJobs((prev) => prev.filter((j) => j.id !== jobId));
+
     try {
       const res = await fetch(
         `${apiUrl}/api/college/job/${jobId}/0`,
         { method: "POST", credentials: "include" }
       );
 
-      if (!res.ok) return;
-
-      setJobs((prev) => prev.filter((j) => j.id !== jobId));
+      if (!res.ok) {
+        // ❌ rollback if API fails
+        fetchJobs();
+      }
     } catch (err) {
       console.error(err.message);
+      fetchJobs(); // rollback on error
     }
   };
 
-  /* ---------------- APPROVE JOB (1) – PENDING ONLY ---------------- */
-  const approveAndOpenModal = async (job) => {
+
+  /* ---------------- APPROVE JOB ---------------- */
+  const approveAndOpenModal = (job) => {
+  // ✅ 1. OPEN MODAL IMMEDIATELY (NO ASYNC)
+  setSelectedJob({ ...job, status: "ASSIGN_MENTOR" });
+
+  // optional UX
+  setFilter("ASSIGN_MENTOR");
+
+  // ✅ 2. Fire-and-forget backend approval
+  (async () => {
     try {
       const res = await fetch(
         `${apiUrl}/api/college/job/${job.id}/1`,
@@ -110,13 +126,22 @@ function CollegeJobsPage() {
 
       if (!res.ok) return;
 
-      setSelectedJob(job);
+      // ✅ 3. Update job locally AFTER modal is open
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === job.id
+            ? { ...j, status: "ASSIGN_MENTOR" }
+            : j
+        )
+      );
     } catch (err) {
       console.error(err.message);
     }
-  };
+  })();
+};
 
-  /* ---------------- ASSIGN MENTOR ONLY ---------------- */
+
+  /* ---------------- ASSIGN MENTOR ---------------- */
   const assignMentorHandler = async () => {
     try {
       const res = await fetch(
@@ -131,7 +156,11 @@ function CollegeJobsPage() {
 
       if (!res.ok) return;
 
-      setJobs((prev) => prev.filter((j) => j.id !== selectedJob.id));
+      // job moves to CURRENT (remove from ASSIGN_MENTOR)
+      setJobs((prev) =>
+        prev.filter((j) => j.id !== selectedJob.id)
+      );
+
       setSelectedJob(null);
       setMentor("");
     } catch (err) {
@@ -216,6 +245,7 @@ function CollegeJobsPage() {
         ))}
       </div>
 
+      {/* ---------------- MODAL ---------------- */}
       {selectedJob && (
         <div className="modal-overlay">
           <div className="modal-card">
@@ -240,7 +270,6 @@ function CollegeJobsPage() {
                 onClick={() => {
                   setSelectedJob(null);
                   setMentor("");
-                  fetchJobs();
                 }}
               >
                 Later

@@ -268,8 +268,9 @@
 }
 
 .search-input {
-  flex: 1;
-  min-width: 220px;
+  
+  width: 420px;
+  max-width: 100%;
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid #d1d5db;
@@ -278,9 +279,9 @@
 
 .view-toggle {
   display: flex;
+  background: #f1f5f9;
+  padding: 4px;
   border-radius: 999px;
-  background: #e5e7eb;
-  padding: 2px;
 }
 
 .toggle-btn {
@@ -777,8 +778,10 @@
 .btn-success {
   height: 32px;
   width: 32px;
-  background: #e6f4ea;        /* light green */
-  color: #137333;             /* dark green */
+  background: #e6f4ea;
+  /* light green */
+  color: #137333;
+  /* dark green */
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -802,8 +805,10 @@
 .btn-danger {
   height: 32px;
   width: 32px;
-  background: #fdecea;        /* light red */
-  color: #d93025;             /* dark red */
+  background: #fdecea;
+  /* light red */
+  color: #d93025;
+  /* dark red */
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -834,7 +839,9 @@
 }
 
 /* Hover polish */
-.btn-primary:hover { background: #1d4ed8; }
+.btn-primary:hover {
+  background: #1d4ed8;
+}
 
 
 /* ===== STATUS PILLS ===== */
@@ -990,27 +997,200 @@
   padding: 20px;
 }
 
-.clickable {
+/* PAGE */
+.mentors-page {
+  padding: 24px;
+  background: #f6f9ff;
+}
+
+/* CARD */
+.card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+/* HEADER */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+}
+
+.page-subtitle {
+  margin-top: 6px;
+  color: #6b7280;
+}
+
+/* ACTION BUTTONS */
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.clickable-row {
+.btn-outline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  padding: 10px 16px;
+  border-radius: 999px;
   cursor: pointer;
 }
 
-.modal-card.large {
-  width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
+/* TOOLBAR */
+.toolbar-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+  align-items: center;
 }
 
-.employee-details section {
-  margin-bottom: 20px;
+.search-input {
+   width: 420px;
+  max-width: 100%;
+  flex: 1;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid #08090d;
+  font-size: 14px;
 }
 
-.interview-card {
-  background: #f9fafb;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 12px;
+/* VIEW TOGGLE */
+
+.view-toggle button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.view-toggle button img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.view-toggle button.active {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.btn-outline img {
+  width: 16px;
+  height: 16px;
+}
+
+
+/* NAME CELL */
+.mentor-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* AVATAR */
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+}
+
+.avatar.large {
+  width: 60px;
+  height: 60px;
+  font-size: 18px;
+}
+
+/* COLORS */
+.color-0 {
+  background: #2563eb;
+}
+
+.color-1 {
+  background: #f97316;
+}
+
+.color-2 {
+  background: #22c55e;
+}
+
+.color-3 {
+  background: #a855f7;
+}
+
+.color-4 {
+  background: #0ea5e9;
+}
+
+/* MENU */
+.menu-dots {
+  text-align: right;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* GRID VIEW */
+.mentor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.mentor-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.mentors-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mentors-table th {
+ 
+  padding: 14px 16px;
+  background: #f8fafc;
+  color: #0a0a0a;
+  font-weight: 600;
+  align-items: center;
+}
+
+.mentors-table td {
+  padding: 14px 16px;
+  border-top: 1px solid #e5e7eb;
+  text-align: left;
+}
+

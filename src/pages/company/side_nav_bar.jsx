@@ -3,6 +3,9 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom"; // Added useNav
 import companyLogo from "../../assets/images/H_logo.png";
 import "../../dashboard.css";
 import logoutIcon from "../../assets/icons/logout.png";
+import gridIcon from "../../assets/icons/grid.png";
+import listIcon from "../../assets/icons/list.png";
+import exportIcon from "../../assets/icons/export.png";
 
 // Helper for dynamic initials
 function getInitials(name) {
@@ -115,22 +118,28 @@ function DashboardLayout() {
 
         <nav className="sidebar-nav">
           <NavLink to="/company/dashboard" end className={navClass}>
-            Dashboard
+            <img src={gridIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Dashboard</span>
           </NavLink>
           <NavLink to="/company/employees" className={navClass}>
-            Employees
+            <img src={listIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Employees</span>
           </NavLink>
           <NavLink to="/company/jobs" className={navClass}>
-            Jobs
+            <img src={exportIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Jobs</span>
           </NavLink>
           <NavLink to="/company/applications" className={navClass}>
-            Applications
+            <img src={listIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Applications</span>
           </NavLink>
           <NavLink to="/company/collaboration" className={navClass}>
-            Collaboration
+            <img src={gridIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Collaboration</span>
           </NavLink>
           <NavLink to="/company/admin-settings" className={navClass}>
-            Admin Settings
+            <img src={exportIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Admin Settings</span>
           </NavLink>
         </nav>
       </aside>

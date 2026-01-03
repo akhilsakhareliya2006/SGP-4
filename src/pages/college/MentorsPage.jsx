@@ -15,6 +15,19 @@ function getInitials(name) {
     .join("");
 }
 
+const SAMPLE_MENTORS = [
+  { id: "1", name: "Asha Patel", email: "asha.patel@example.com" },
+  { id: "2", name: "Rohit Kumar", email: "rohit.kumar@example.com" },
+  { id: "3", name: "Simran Kaur", email: "simran.kaur@example.com" },
+  { id: "4", name: "Vikram Singh", email: "vikram.singh@example.com" },
+  { id: "5", name: "Neha Sharma", email: "neha.sharma@example.com" },
+  { id: "6", name: "Neha Sharma", email: "neha.sharma@example.com" },   
+  { id: "7", name: "Neha Sharma", email: "neha.sharma@example.com" },
+  { id: "8", name: "Neha Sharma", email: "neha.sharma@example.com" },
+
+
+];
+
 function MentorsPage() {
   const { college } = useOutletContext();
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -26,7 +39,7 @@ function MentorsPage() {
   const [mentors, setMentors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  
+
 
   /* ---------- Fetch Mentors ---------- */
   useEffect(() => {
@@ -36,9 +49,14 @@ function MentorsPage() {
           credentials: "include",
         });
         const data = await res.json();
-        setMentors(data.data || []);
+        if (data && Array.isArray(data.data) && data.data.length > 0) {
+          setMentors(data.data);
+        } else {
+          setMentors(SAMPLE_MENTORS);
+        }
       } catch (err) {
         console.error(err);
+        setMentors(SAMPLE_MENTORS);
       } finally {
         setIsLoading(false);
       }
@@ -114,52 +132,48 @@ function MentorsPage() {
         </div>
       </div>
 
-      {/* ================= LIST CARD ================= */}
-      <div className="card mentors-list-card">
-        {viewMode === "list" ? (
-          <table className="mentors-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th></th>
-              </tr>
-            </thead>
+      {/* ================= LIST CARD (header + rows in same card) ================= */}
+      {viewMode === "list" ? (
+        <div className="card mentors-list-card">
+          <div className="mentors-header-grid">
+            <div>ID</div>
+            <div>Name</div>
+            <div>Email</div>
+            <div></div>
+          </div>
 
-            <tbody>
-              {filteredMentors.map((m, i) => (
-                <tr key={m.id}>
-                  <td>{m.id.slice(0, 4)}...</td>
-                  <td>
-                    <div className="mentor-cell">
-                      <span className={`avatar color-${i % 5}`}>
-                        {getInitials(m.name)}
-                      </span>
-                      {m.name}
-                    </div>
-                  </td>
-                  <td>{m.email}</td>
-                  <td className="menu-dots">⋮</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="mentor-grid">
+          <div className="mentors-rows">
             {filteredMentors.map((m, i) => (
-              <div key={m.id} className="mentor-card">
-                <span className={`avatar large color-${i % 5}`}>
-                  {getInitials(m.name)}
-                </span>
-                <h4>{m.name}</h4>
-                <p>{m.email}</p>
-                <small>ID: {m.id.slice(0, 8)}...</small>
+              <div className="mentor-row" key={m.id}>
+                <div className="col id-col">{m.id.slice(0, 4)}...</div>
+                <div className="col name-col">
+                  <div className="mentor-cell">
+                    <span className={`avatar color-${i % 5}`}>
+                      {getInitials(m.name)}
+                    </span>
+                    <span className="name-text">{m.name}</span>
+                  </div>
+                </div>
+                <div className="col email-col">{m.email}</div>
+                <div className="col actions-col">⋮</div>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="mentor-grid">
+          {filteredMentors.map((m, i) => (
+            <div key={m.id} className="mentor-card">
+              <span className={`avatar large color-${i % 5}`}>
+                {getInitials(m.name)}
+              </span>
+              <h4>{m.name}</h4>
+              <p>{m.email}</p>
+              <small>ID: {m.id.slice(0, 8)}...</small>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

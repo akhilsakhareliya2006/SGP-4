@@ -3,6 +3,9 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import collegeLogo from "../../assets/images/H_logo.png";
 import "../../dashboard.css";
 import logoutIcon from "../../assets/icons/logout.png";
+import gridIcon from "../../assets/icons/grid.png";
+import listIcon from "../../assets/icons/list.png";
+import exportIcon from "../../assets/icons/export.png";
 
 /* ---------- Helper ---------- */
 function getInitials(name) {
@@ -134,22 +137,28 @@ function CollegeDashboardLayout() {
 
         <nav className="sidebar-nav">
           <NavLink to="/college/dashboard" end className={navClass}>
-            Dashboard
+            <img src={gridIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Dashboard</span>
           </NavLink>
           <NavLink to="/college/mentors" className={navClass}>
-            Mentors
+            <img src={listIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Mentors</span>
           </NavLink>
           <NavLink to="/college/jobs" className={navClass}>
-            Jobs
+            <img src={exportIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Jobs</span>
           </NavLink>
           <NavLink to="/college/students" className={navClass}>
-            Students
+            <img src={listIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Students</span>
           </NavLink>
           <NavLink to="/college/collaboration" className={navClass}>
-            Collaboration
+            <img src={gridIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Collaboration</span>
           </NavLink>
           <NavLink to="/college/admin-settings" className={navClass}>
-            Admin Settings
+            <img src={exportIcon} alt="" className="nav-icon" />
+            <span className="nav-label">Admin Settings</span>
           </NavLink>
         </nav>
       </aside>

@@ -1235,9 +1235,9 @@
 
 .mentor-row .col { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
 .mentor-row .name-col .mentor-cell { justify-content: center; }
-.mentor-row .id-col { color: #6b7280; }
-.mentor-row .email-col { color: #374151; }
-.mentor-row .actions-col { }
+.mentor-row .id-col { color: #0f0f0f; }
+.mentor-row .email-col { color: #0e0e0f; }
+/* .mentor-row .actions-col { } */
 
 /* header alignment to match row columns (centered) */
 .mentors-header-grid > div { text-align: center; }

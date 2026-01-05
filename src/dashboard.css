@@ -1058,6 +1058,74 @@
   cursor: pointer;
 }
 
+/* Add icon inside primary buttons */
+.btn-add-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: cover;
+  display: inline-block;
+  margin-right: 8px;
+  border-radius: 6px;
+  background: #fff;
+  padding: 2px;
+}
+
+.btn-primary:active .btn-add-icon,
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+/* Modernized primary button style for header (mentors page) */
+.mentors-header-card .header-actions .btn-primary,
+.header-row .header-actions .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1e40af 0%, #2563eb 100%);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(37,99,235,0.14);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.mentors-header-card .header-actions .btn-primary:hover,
+.header-row .header-actions .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(37,99,235,0.18);
+}
+
+.mentors-header-card .header-actions .btn-primary:focus,
+.header-row .header-actions .btn-primary:focus {
+  outline: 3px solid rgba(37,99,235,0.16);
+  outline-offset: 2px;
+}
+
+/* Icon inside primary button */
+.mentors-header-card .header-actions .btn-add-icon,
+.header-row .header-actions .btn-add-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  margin-right: 6px;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 3px;
+  box-shadow: 0 2px 6px rgba(16,24,40,0.08);
+}
+
+/* Optional: icon-only compact variant */
+.btn-icon-only {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
 .btn-outline {
   display: flex;
   align-items: center;
@@ -1180,6 +1248,7 @@
 }
 
 .mentor-card {
+ 
   background: #fff;
   border-radius: 16px;
   padding: 20px;

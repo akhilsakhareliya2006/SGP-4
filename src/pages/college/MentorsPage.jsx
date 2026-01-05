@@ -4,6 +4,7 @@ import { useOutletContext } from "react-router-dom";
 import gridIcon from "../../assets/icons/grid.png";
 import listIcon from "../../assets/icons/list.png";
 import exportIcon from "../../assets/icons/export.png";
+import addIcon from "../../assets/icons/add.png";
 
 /* ---------- Helpers ---------- */
 function getInitials(name) {
@@ -21,7 +22,7 @@ const SAMPLE_MENTORS = [
   { id: "3", name: "Simran Kaur", email: "simran.kaur@example.com" },
   { id: "4", name: "Vikram Singh", email: "vikram.singh@example.com" },
   { id: "5", name: "Neha Sharma", email: "neha.sharma@example.com" },
-  { id: "6", name: "Neha Sharma", email: "neha.sharma@example.com" },   
+  { id: "6", name: "Neha Sharma", email: "neha.sharma@example.com" },
   { id: "7", name: "Neha Sharma", email: "neha.sharma@example.com" },
   { id: "8", name: "Neha Sharma", email: "neha.sharma@example.com" },
 
@@ -85,7 +86,7 @@ function MentorsPage() {
       <div className="card mentors-header-card">
         <div className="header-row">
           <div>
-            <h2 className="page-title">Mentors</h2>
+            <h2 className="page-title"> Mentors</h2>
             <p className="page-subtitle">
               Manage mentors for <strong>{college?.name}</strong>
             </p>
@@ -101,7 +102,8 @@ function MentorsPage() {
               className="btn-primary"
               onClick={() => setShowAddModal(true)}
             >
-              + Add Mentor
+              <img src={addIcon} alt="Add" className="btn-add-icon" />
+              Add Mentor
             </button>
           </div>
         </div>
@@ -155,7 +157,7 @@ function MentorsPage() {
                   </div>
                 </div>
                 <div className="col email-col">{m.email}</div>
-                <div className="col actions-col">⋮</div>
+                <div className="col actions-col"></div>
               </div>
             ))}
           </div>
@@ -167,9 +169,12 @@ function MentorsPage() {
               <span className={`avatar large color-${i % 5}`}>
                 {getInitials(m.name)}
               </span>
+
+              <small>ID: {m.id.slice(0, 8)}</small>
               <h4>{m.name}</h4>
               <p>{m.email}</p>
-              <small>ID: {m.id.slice(0, 8)}...</small>
+
+
             </div>
           ))}
         </div>

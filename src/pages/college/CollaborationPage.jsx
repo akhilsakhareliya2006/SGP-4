@@ -1,9 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 
 /* ---------- Status Badge ---------- */
 function StatusBadge({ status, onAccept, onReject }) {
-  // Only show icons when request is coming
   if (status !== "REQUEST") return null;
 
   return (
@@ -14,71 +13,120 @@ function StatusBadge({ status, onAccept, onReject }) {
   );
 }
 
-
-
-
-/* ---------- Mock Data (replace with API later) ---------- */
-const MOCK_COMPANIES = [
-  {
-    id: 1,
-    name: "TechNova Pvt Ltd",
-    address: "Ahmedabad, Gujarat",
-    status: "REQUEST",
-  },
-
-  {
-    id: 2,
-    name: "InnoSoft Solutions",
-    address: "Pune, Maharashtra",
-    status: "COLLABORATED",
-  },
-
-  {
-    id: 3,
-    name: "CodeCrafters",
-    address: "Bangalore, Karnataka",
-    status: "REJECTED",
-  },
-];
-
+/* ---------- Helpers ---------- */
 function getInitial(name) {
   return name?.charAt(0)?.toUpperCase() || "?";
 }
 
+/* ---------- Status Mapping ---------- */
+const STATUS_MAP = {
+  pending: "REQUEST",
+  accepted: "COLLABORATED",
+  rejected: "REJECTED",
+};
+
+const REVERSE_STATUS_MAP = {
+  REQUEST: "pending",
+  COLLABORATED: "accepted",
+  REJECTED: "rejected",
+};
+
 /* ---------- Page ---------- */
 function CollegeCollaborationPage() {
+  const apiUrl = import.meta.env.VITE_API_URL;
   const { college } = useOutletContext();
 
+  const [companies, setCompanies] = useState([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("REQUEST");  // by default mate 
-  
+  const [filter, setFilter] = useState("REQUEST");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  /* ---------- Fetch Collaborations ---------- */
+  useEffect(() => {
+    fetchCompanies(REVERSE_STATUS_MAP[filter]);
+  }, [filter]);
 
+  const fetchCompanies = async (backendStatus = "pending") => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const filteredCompanies = useMemo(() => {
-    return MOCK_COMPANIES.filter((c) => {
-      const matchesSearch =
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.address.toLowerCase().includes(search.toLowerCase());
+      const query = new URLSearchParams({
+        status: backendStatus,
+      }).toString();
 
-      const matchesFilter =
-        filter === "ALL" || c.status === filter;
+      const res = await fetch(
+        `${apiUrl}/api/college/collab/request?${query}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
 
-      return matchesSearch && matchesFilter;
-    });
-  }, [search, filter]);
+      if (!res.ok) throw new Error("Failed to fetch collaborations");
+
+      const data = await res.json();
+
+      const normalized = (data.data || []).map((c) => ({
+        ...c,
+        status: STATUS_MAP[c.status] || "REQUEST",
+      }));
+
+      setCompanies(normalized);
+    } catch (err) {
+      setError(err.message);
+      setCompanies([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ---------- Accept / Reject ---------- */
+  const updateStatus = async (companyId, action) => {
+    // ✅ Optimistic UI (instant removal)
+    setCompanies((prev) =>
+      prev.filter((c) => c.company.id !== companyId)
+    );
+
+    try {
+      const res = await fetch(
+        `${apiUrl}/api/college/collab/request/${companyId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ result: action }), // "1" or "0"
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) throw new Error("Action failed");
+    } catch (err) {
+      alert(err.message);
+      // rollback if API fails
+      fetchCompanies(REVERSE_STATUS_MAP[filter]);
+    }
+  };
+
+  const handleAccept = (id) => updateStatus(id, "1");
+  const handleReject = (id) => updateStatus(id, "0");
+
+  /* ---------- Search (client-side only) ---------- */
+  const filteredCompanies = companies.filter((c) =>
+    c.company.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.company.address.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="collaboration-page">
       {/* Header */}
       <div className="employees-header">
-        <div>
-          <h2 className="page-title">Collaboration</h2>
-          {/* <p className="page-subtitle">
-            Manage collaboration requests for{" "}
-            <strong>{college?.name}</strong>
-          </p> */}
-        </div>
+        <h2 className="page-title">Collaboration</h2>
       </div>
 
       {/* Search */}
@@ -91,11 +139,10 @@ function CollegeCollaborationPage() {
 
       {/* Filters */}
       <div className="filter-tabs">
-        {[, "REQUEST", "COLLABORATED", "REJECTED"].map((item) => (
+        {["REQUEST", "COLLABORATED", "REJECTED"].map((item) => (
           <button
             key={item}
-            className={`filter-pill ${filter === item ? "active" : ""
-              }`}
+            className={`filter-pill ${filter === item ? "active" : ""}`}
             onClick={() => setFilter(item)}
           >
             {item}
@@ -103,32 +150,42 @@ function CollegeCollaborationPage() {
         ))}
       </div>
 
+      {/* States */}
+      {loading && <div className="loading">Loading collaborations...</div>}
+      {error && <div className="error">{error}</div>}
+
       {/* List */}
       <div className="collab-list">
         {filteredCompanies.map((company) => (
           <div key={company.id} className="collab-card">
             <div className="collab-left">
               <div className="collab-logo">
-                {getInitial(company.name)}
+                {getInitial(company.company.name)}
               </div>
 
               <div>
-                <div className="collab-name">{company.name}</div>
+                <div className="collab-name">
+                  {company.company.name}
+                </div>
                 <div className="collab-address">
-                  {company.address}
+                  {company.company.address}
                 </div>
               </div>
             </div>
 
             <div className="collab-right">
-              <StatusBadge status={company.status} />
+              <StatusBadge
+                status={company.status}
+                onAccept={() => handleAccept(company.company.id)}
+                onReject={() => handleReject(company.company.id)}
+              />
             </div>
           </div>
         ))}
 
-        {filteredCompanies.length === 0 && (
+        {!loading && filteredCompanies.length === 0 && (
           <div className="empty-state">
-            No collaboration records found.
+            No {filter.toLocaleLowerCase()} records found.
           </div>
         )}
       </div>

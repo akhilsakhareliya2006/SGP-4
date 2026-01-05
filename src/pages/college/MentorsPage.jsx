@@ -50,14 +50,16 @@ function MentorsPage() {
           credentials: "include",
         });
         const data = await res.json();
+        console.log(data);
+        
         if (data && Array.isArray(data.data) && data.data.length > 0) {
           setMentors(data.data);
         } else {
-          setMentors(SAMPLE_MENTORS);
+          setMentors(mentors);
         }
       } catch (err) {
         console.error(err);
-        setMentors(SAMPLE_MENTORS);
+        setMentors(mentors);
       } finally {
         setIsLoading(false);
       }

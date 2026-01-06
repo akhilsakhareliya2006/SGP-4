@@ -1,5 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import HLogo from "../assets/images/H_logo.png";
+
 
 const Navbar = () => {
   const location = useLocation();
@@ -8,9 +10,11 @@ const Navbar = () => {
     location.pathname === path ? "nav-link active" : "nav-link";
 
   return (
+
     <nav className="navbar">
       {/* Left */}
       <div className="nav-left">
+        <img src={HLogo} alt="CampusHire Logo" className="nav-logo" />
         <span className="logo-text">CampusHire</span>
       </div>
 
@@ -24,9 +28,8 @@ const Navbar = () => {
           Register
         </Link>
       </div>
-
-
     </nav>
+
   );
 };
 

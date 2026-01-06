@@ -291,26 +291,48 @@
 }
 
 .view-toggle {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+
   background: #f1f5f9;
-  padding: 4px;
+  padding: 3px;           
   border-radius: 999px;
+
+  gap: 2px;
 }
 
+
 .toggle-btn {
+  width: 34px;            
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
   border: none;
   background: transparent;
-  padding: 6px 14px;
-  font-size: 12px;
   border-radius: 999px;
+
+  padding: 0;
+  margin: 0;
+
   cursor: pointer;
-  color: #4b5563;
+  box-sizing: border-box;
 }
+
 
 .toggle-btn.active {
   background: #ffffff;
-  color: #111827;
-  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+
+
+
+.toggle-btn img {
+  width: 16px;             /* ⬅️ HARD STOP */
+  height: 16px;
+  display: block;
 }
 
 /* Grid view */
@@ -844,12 +866,31 @@
 
 
 .btn-outline {
-  background: transparent;
-  border: 1.5px solid #d1d5db;
-  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 12px;       /* ⬅️ smaller */
+  height: 34px;            /* ⬅️ force height */
+
+  border: 1px solid #d1d5db;
   border-radius: 999px;
+  background: #ffffff;
+
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+
   cursor: pointer;
+  white-space: nowrap;
 }
+
+.btn-outline img {
+  width: 14px;             /* ⬅️ hard limit */
+  height: 14px;
+  display: block;
+}
+
 
 /* Hover polish */
 .btn-primary:hover {
@@ -1118,7 +1159,7 @@
 /* Optional: icon-only compact variant */
 .btn-icon-only {
   width: 44px;
-  height: 44px;
+  height: 43px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -1127,14 +1168,17 @@
 }
 
 .btn-outline {
+  font-size: 15px;
+  
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid #d1d5db;
+  border: 2px solid #111112;
   background: #fff;
   padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
+  
 }
 
 /* TOOLBAR */
@@ -1158,34 +1202,6 @@
 
 /* VIEW TOGGLE */
 
-.view-toggle button {
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: transparent;
-  border-radius: 50%;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.view-toggle button img {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-}
-
-.view-toggle button.active {
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.btn-outline img {
-  width: 16px;
-  height: 16px;
-}
 
 
 /* NAME CELL */

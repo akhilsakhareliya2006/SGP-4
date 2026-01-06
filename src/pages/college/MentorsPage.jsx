@@ -17,7 +17,7 @@ function getInitials(name) {
 }
 
 const SAMPLE_MENTORS = [
-  { id: "1", name: "Asha Patel", email: "asha.patel@example.com" },
+  { id: "1", name: "Asha Patel ", email: "akhilsakhareliya1234@example.com" },
   { id: "2", name: "Rohit Kumar", email: "rohit.kumar@example.com" },
   { id: "3", name: "Simran Kaur", email: "simran.kaur@example.com" },
   { id: "4", name: "Vikram Singh", email: "vikram.singh@example.com" },
@@ -50,16 +50,14 @@ function MentorsPage() {
           credentials: "include",
         });
         const data = await res.json();
-        console.log(data);
-        
         if (data && Array.isArray(data.data) && data.data.length > 0) {
           setMentors(data.data);
         } else {
-          setMentors(mentors);
+          setMentors(SAMPLE_MENTORS);
         }
       } catch (err) {
         console.error(err);
-        setMentors(mentors);
+        setMentors(SAMPLE_MENTORS);
       } finally {
         setIsLoading(false);
       }
@@ -149,7 +147,7 @@ function MentorsPage() {
           <div className="mentors-rows">
             {filteredMentors.map((m, i) => (
               <div className="mentor-row" key={m.id}>
-                <div className="col id-col">{m.id.slice(0, 4)}...</div>
+                <div className="col id-col">{m.id.slice(0, 4)}</div>
                 <div className="col name-col">
                   <div className="mentor-cell">
                     <span className={`avatar color-${i % 5}`}>

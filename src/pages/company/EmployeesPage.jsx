@@ -4,6 +4,8 @@ import { useOutletContext } from "react-router-dom";
 import gridIcon from "../../assets/icons/grid.png";
 import listIcon from "../../assets/icons/list.png";
 import exportIcon from "../../assets/icons/export.png";
+import addIcon from "../../assets/icons/add.png";
+
 
 /* ---------- Helpers ---------- */
 function getInitials(name) {
@@ -173,7 +175,9 @@ function EmployeesPage() {
             className="btn-primary"
             onClick={() => setShowAddModal(true)}
           >
-            + Add Employee
+            <img src={addIcon} alt="Add" className="btn-add-icon" />
+
+            Add Employee
           </button>
         </div>
       </div>

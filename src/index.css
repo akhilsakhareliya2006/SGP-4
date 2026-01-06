@@ -33,18 +33,42 @@ body {
   gap: 16px;
 }
 
-
-
-
 .navbar {
   height: 64px;
+  padding: 0 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  background: #0b1e44;
-  color: white;
+
+  background: linear-gradient(90deg, #09153d 5%, #091f50 90%);
+  
 }
+.nav-left:hover .nav-logo {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.6));
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;              
+}
+
+.nav-logo {
+
+  border-radius: 300px;
+  width: 30px;            
+  height: 28px;
+  object-fit: contain;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
 
 /* Register button style */
 .nav-register {
@@ -62,11 +86,6 @@ body {
 }
 
 
-
-.logo-text {
-  font-weight: 700;
-  font-size: 1.25rem;
-}
 
 
 
@@ -285,7 +304,7 @@ body {
   font-weight: 500;
   color: #ffffff;
   text-decoration: none;
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border: 2px solid rgb(255, 255, 255);
   transition: all 0.25s ease;
   position: relative;
 }
@@ -307,7 +326,7 @@ body {
 .nav-register {
   
   font-weight: 600;
-  background-color: #171950;
+  background-color: #072056;
 }
 
 
@@ -355,7 +374,8 @@ body {
 .auth-btn {
   width: 100%;
   padding: 12px;
-  background: #132a59;
+    background: linear-gradient(90deg, #09153d 5%, #153478 90%);
+
   border: none;
   border-radius: 999px;
   color: white;
@@ -600,26 +620,41 @@ body {
 }
 
 .export-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  /* space between icon & text */
-  padding: 8px 14px;
-  border: 1px solid #d1d5db;
+  gap: 6px;
+
+  padding: 6px 12px;        /* 🔹 reduced size */
+  height: 44px;             /* 🔹 fixed height for consistency */
+
+  border: 2px solid #111112;
   background: #ffffff;
-  border-radius: 22px;
+  border-radius: 999px;
+
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;          /* 🔹 slightly smaller text */
+  font-weight: 600;
+  color: #111827;
+
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 }
+
+.export-btn img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
 
 .export-btn:hover {
-  background: #f3f4f6;
+  background: #f8fafc;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
+
 .export-icon {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .export-text {

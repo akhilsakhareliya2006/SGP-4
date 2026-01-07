@@ -118,19 +118,20 @@ function MentorsPage() {
 
           <div className="view-toggle">
             <button
-              className={viewMode === "grid" ? "active" : ""}
+              className={`toggle-btn ${viewMode === "grid" ? "active" : ""}`}
               onClick={() => setViewMode("grid")}
             >
               <img src={gridIcon} alt="Grid" />
             </button>
 
             <button
-              className={viewMode === "list" ? "active" : ""}
+              className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
               onClick={() => setViewMode("list")}
             >
               <img src={listIcon} alt="List" />
             </button>
           </div>
+
         </div>
       </div>
 
@@ -170,14 +171,13 @@ function MentorsPage() {
                 {getInitials(m.name)}
               </span>
 
-              <small>ID: {m.id.slice(0, 8)}</small>
-              <h4>{m.name}</h4>
-              <p>{m.email}</p>
-
-
+              <small className="mentor-id">ID: {m.id.slice(0, 8)}</small>
+              <h4 className="mentor-name">{m.name}</h4>
+              <p className="mentor-email">{m.email}</p>
             </div>
           ))}
         </div>
+
       )}
     </div>
   );

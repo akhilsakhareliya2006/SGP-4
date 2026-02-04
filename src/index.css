@@ -223,11 +223,16 @@ body {
 
 /* ===== AUTH UI (LOGIN PAGE) ===== */
 
+/* Main split layout */
+
+
+
+
 .auth-page {
   min-height: calc(100vh - 64px);
-  /* subtract navbar height */
+  
   padding-top: 64px;
-  /* space for navbar */
+  
   background: linear-gradient(120deg, #f5f7fb, #eef2ff);
   display: flex;
   justify-content: center;

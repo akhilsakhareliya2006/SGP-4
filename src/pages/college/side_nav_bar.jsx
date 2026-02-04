@@ -121,7 +121,7 @@ function CollegeDashboardLayout() {
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <img src={collegeLogo} alt="College logo" />
-            <div className="sidebar-company-meta">
+            <div className="sidebar-company-meta">  
               {/* <span className="sidebar-company-name">{college.name}</span> */}
               <span className="sidebar-company-role">College Panel</span>
             </div>

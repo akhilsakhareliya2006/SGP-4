@@ -49,11 +49,16 @@ function MentorsPage() {
         const res = await fetch(`${apiUrl}/api/college/mentors`, {
           credentials: "include",
         });
+
         const data = await res.json();
-        
-        
-        if (data && Array.isArray(data.data) && data.data.length > 0) {
-          setMentors(data.data);
+        console.log("API response:", data);
+
+        if (
+          data?.data?.mentors &&
+          Array.isArray(data.data.mentors) &&
+          data.data.mentors.length > 0
+        ) {
+          setMentors(data.data.mentors);
         } else {
           setMentors(SAMPLE_MENTORS);
         }
@@ -67,6 +72,7 @@ function MentorsPage() {
 
     fetchMentors();
   }, [apiUrl]);
+
 
   /* ---------- Search ---------- */
   const filteredMentors = useMemo(() => {

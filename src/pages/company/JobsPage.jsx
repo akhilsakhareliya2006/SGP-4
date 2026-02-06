@@ -28,9 +28,9 @@ function CompanyJobsPage() {
           credentials: "include",
         });
         const data = await res.json().catch(() => ({}));
-        console.log(data.data);
+        console.log(data);
         
-        setJobs(data.data); // ApiResponse → data
+        setJobs(data.data.jobs); // ApiResponse → data
       } catch (err) {
         console.error(err);
       } finally {
@@ -42,11 +42,12 @@ function CompanyJobsPage() {
   }, [filter]);
 
   // 🔹 Frontend search
-  const filteredJobs = useMemo(() => {
-    return jobs.filter((job) =>
-      job.title.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [jobs, search]);
+ const filteredJobs = useMemo(() => {
+  return (jobs || []).filter((job) =>
+    job.title?.toLowerCase().includes(search.toLowerCase())
+  );
+}, [jobs, search]);
+
 
   return (
     <div className="jobs-page">

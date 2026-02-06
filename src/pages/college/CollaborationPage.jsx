@@ -66,12 +66,15 @@ function CollegeCollaborationPage() {
           credentials: "include",
         }
       );
+      
+ 
 
       if (!res.ok) throw new Error("Failed to fetch collaborations");
 
       const data = await res.json();
+           console.log(data)
 
-      const normalized = (data.data || []).map((c) => ({
+      const normalized = (data.data.collabRequests || []).map((c) => ({
         ...c,
         status: STATUS_MAP[c.status] || "REQUEST",
       }));

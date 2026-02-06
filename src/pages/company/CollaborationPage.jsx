@@ -61,13 +61,16 @@ function CollaborationPage() {
         credentials: "include",
       });
 
-      const data = await res.json();
+      
 
-      if (res.ok && data.data) {
+      const data = await res.json();
+      console.log(data)
+
+      if (res.ok && data.data.colleges) {
         // Backend specific filter logic fix: 
         // The backend 'else' block returns raw college objects without 'status'.
         // We manually inject the status if we are filtering by a specific type.
-        const mappedData = data.data.map(college => ({
+        const mappedData = data.data.colleges.map(college => ({
           ...college,
           status: filter === "ALL" ? college.status : filter // Inject status if missing
         }));

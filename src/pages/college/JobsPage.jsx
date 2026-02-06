@@ -26,7 +26,9 @@ function CollegeJobsPage() {
       if (!res.ok) return;
 
       const data = await res.json();
-      const jobsFromApi = data.data || data.jobs || [];
+      const jobsFromApi = data.data.jobRequests || data.jobs || [];
+
+      // console.log(data);
 
       setJobs(
         jobsFromApi.map((job) => ({
@@ -61,7 +63,8 @@ function CollegeJobsPage() {
         if (!res.ok) return;
 
         const data = await res.json();
-        const mentorsFromApi = data.data || data.mentors || [];
+        const mentorsFromApi = data.data.mentors || data.mentors || [];
+        // console.log(mentorsFromApi)
 
         setMentors(
           mentorsFromApi.map((m) => ({

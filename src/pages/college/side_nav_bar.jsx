@@ -30,47 +30,47 @@ function CollegeDashboardLayout() {
 
   //frontend only
   
-  useEffect(()=>{
-    const fetchCollege=async()=>{
-      setCollege({
-          name:"Charusat",
-          email:"charusat@admin.com"
-      })
-      setIsLoading(false)
-    }
-    fetchCollege()
-  },[])
+  // useEffect(()=>{
+  //   const fetchCollege=async()=>{
+  //     setCollege({
+  //         name:"Charusat",
+  //         email:"charusat@admin.com"
+  //     })
+  //     setIsLoading(false)
+  //   }
+  //   fetchCollege()
+  // },[])
 
   
   //with backend
 
   /* ---------- Fetch Logged-in College ---------- */
-  // useEffect(() => {
-  //   const fetchCollege = async () => {
-  //     try {
-  //       const res = await fetch(`${apiUrl}/api/auth/me`, {
-  //         method: "GET",
-  //         headers: { "Content-Type": "application/json" },
-  //         credentials: "include",
-  //       });
+  useEffect(() => {
+    const fetchCollege = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/auth/me`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
 
-  //       if (!res.ok) {
-  //         navigate("/login");
-  //         return;
-  //       }
+        if (!res.ok) {
+          navigate("/login");
+          return;
+        }
 
-  //       const data = await res.json();
-  //       setCollege(data.data);
-  //     } catch (error) {
-  //       console.error("College auth error:", error);
-  //       navigate("/login");
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
+        const data = await res.json();
+        setCollege(data.data);
+      } catch (error) {
+        console.error("College auth error:", error);
+        navigate("/login");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  //   fetchCollege();
-  // }, [navigate,apiUrl]);
+    fetchCollege();
+  }, [navigate,apiUrl]);
 
   useEffect(()=>{
     const fetchCollege=async()=>{

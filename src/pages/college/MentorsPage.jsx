@@ -40,6 +40,79 @@ function MentorsPage() {
   const [mentors, setMentors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+  });
+
+  const [isCreating, setIsCreating] = useState(false);
+
+  /* ---------- CREATE MENTOR ---------- */
+  const handleCreateMentor = async (e) => {
+    e.preventDefault();
+    if (isCreating) return;
+
+    setIsCreating(true);
+
+    try {
+      const res = await fetch(
+        `${apiUrl}/api/college/create/mentor`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(formData),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to add mentor");
+      }
+
+      setShowAddModal(false);
+      setFormData({ name: "", email: "" });
+
+      // refresh list
+      fetchMentors();
+    } catch (err) {
+      alert(err.message || "Something went wrong");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const exportMentors = async () => {
+    try {
+      const res = await fetch(
+        `${apiUrl}/api/college/export/mentors`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mentors.csv";
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Mentor export error:", err);
+      alert("Failed to export mentors");
+    }
+  };
 
 
   /* ---------- Fetch Mentors ---------- */
@@ -101,10 +174,11 @@ function MentorsPage() {
           </div>
 
           <div className="header-actions">
-            <button className="btn-outline">
-              <img src={exportIcon} alt="" />
+            <button className="btn-outline" onClick={exportMentors}>
+              <img src={exportIcon} alt="Export" />
               Export
             </button>
+
 
             <button
               className="btn-primary"
@@ -187,6 +261,77 @@ function MentorsPage() {
         </div>
 
       )}
+
+      {/* ================= ADD MENTOR MODAL ================= */}
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <div>
+                <h3>Add New Mentor</h3>
+                <p className="modal-subtitle">
+                  College: <strong>{college?.name}</strong>
+                </p>
+              </div>
+
+              <button
+                className="modal-close"
+                onClick={() => setShowAddModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form className="modal-form" onSubmit={handleCreateMentor}>
+              <div className="form-group">
+                <label>Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter mentor name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter mentor email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => setShowAddModal(false)}
+                  disabled={isCreating}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Adding..." : "Add Mentor"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

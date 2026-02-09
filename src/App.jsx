@@ -24,13 +24,45 @@ import StudentsPage from "./pages/college/StudentsPage";
 import CollegeCollaborationPage from "./pages/college/CollaborationPage";
 import CollegeAdminSettingsPage from "./pages/college/AdminSettingsPage";
 
+
+/* ---------- Student ---------- */
+import StudentDashboardLayout from "./pages/student/side_nav_bar";
+import StudentDashboard from "./pages/student/DashboardPage";
+import StudentApplyPage from "./pages/student/ApplyPage";
+import StudentJobsPage from "./pages/student/JobsPage";
+import StudentApplicationsPage from "./pages/student/ApplicationsPage";
+
+import StudentMentorApprovedPage from "./pages/student/MentorApprovedPage";
+import StudentProfilePage from "./pages/student/ProfilePage";
+
+
+/* ---------- Inline Coming Soon ---------- */
+function ComingSoon({ title }) {
+  return (
+    <div
+      style={{
+        height: "70vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#475569",
+      }}
+    >
+      <h1>{title}</h1>
+      <p>🚧 Coming Soon</p>
+    </div>
+  );
+}
+
 function App() {
   const location = useLocation();
 
   // Hide navbar on dashboards
   const hideNavbar =
     location.pathname.startsWith("/company") ||
-    location.pathname.startsWith("/college");
+    location.pathname.startsWith("/college") ||
+    location.pathname.startsWith("/student");
 
   return (
     <>
@@ -56,19 +88,33 @@ function App() {
         </Route>
 
         {/* ---------- College Dashboard ---------- */}
-        <Route path="/college" element={<CollegeDashboardLayout />}>
+        <Route path="/student" element={<StudentDashboardLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<CollegeDashboard />} />
-          <Route path="mentors" element={<MentorsPage />} />
-          <Route path="jobs" element={<CollegeJobsPage />} />
-          <Route path="students" element={<StudentsPage />} />
-          <Route path="collaboration" element={<CollegeCollaborationPage />} />
-          <Route path="admin-settings" element={<CollegeAdminSettingsPage />} />
+
+          <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="apply" element={<StudentApplyPage />} />
+          <Route path="jobs" element={<StudentJobsPage />} />
+          <Route path="applications" element={<StudentApplicationsPage />} />
+          <Route path="mentor-approved" element={<StudentMentorApprovedPage />} />
+          <Route path="profile" element={<StudentProfilePage />} />
+        </Route>
+
+
+        {/* ---------- Student Dashboard ---------- */}
+
+        <Route path="/student" element={<StudentDashboardLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+
+          <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="apply" element={<StudentApplyPage />} />
+          <Route path="jobs" element={<StudentJobsPage />} />
+          <Route path="applications" element={<StudentApplicationsPage />} />  {/* ✅ */}
+          <Route path="mentor-approved" element={<StudentMentorApprovedPage />} />
+          <Route path="profile" element={<StudentProfilePage />} />
         </Route>
 
 
 
-        
 
         {/* ---------- Fallback ---------- */}
         <Route path="*" element={<Navigate to="/login" replace />} />

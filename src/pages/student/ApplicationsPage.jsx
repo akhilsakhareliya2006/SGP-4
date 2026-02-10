@@ -13,29 +13,37 @@ function ApplicationsPage() {
       id: 1,
       title: "Frontend Developer",
       company: "Tech Solutions Pvt Ltd",
-      status: "pending", // pending | shortlisted | hired | rejected
+      location: "Bangalore, India",
+      salary: "₹6–8 LPA",
+      status: "pending",
     },
     {
       id: 2,
       title: "Backend Developer",
       company: "Innovate Labs",
+      location: "Pune, India",
+      salary: "₹5–7 LPA",
       status: "shortlisted",
     },
     {
       id: 3,
       title: "Full Stack Engineer",
       company: "CloudWorks",
+      location: "Remote",
+      salary: "₹7–10 LPA",
       status: "hired",
     },
     {
       id: 4,
       title: "UI Engineer",
       company: "NextGen Systems",
+      location: "Ahmedabad, India",
+      salary: "₹4–6 LPA",
       status: "rejected",
     },
   ];
 
-  // ✅ SEARCH + FILTER LOGIC
+  // SEARCH + FILTER
   const filteredApplications = applications.filter((item) => {
     const matchesSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -79,16 +87,35 @@ function ApplicationsPage() {
         ) : (
           filteredApplications.map((item) => (
             <div key={item.id} className="job-card-soft">
+              {/* LEFT */}
               <div className="job-info-left">
                 <div className="job-title-soft">{item.title}</div>
                 <div className="job-company-soft">{item.company}</div>
+
+                {/* ✅ Location + Salary (clean line) */}
+                <div className="job-meta-column">
+                  <div className="job-meta-line">
+                    <span className="job-meta-label">Location:</span>
+                    <span className="job-meta-value">{item.location}</span>
+                  </div>
+
+                  <div className="job-meta-line">
+                    <span className="job-meta-label">Salary:</span>
+                    <span className="job-meta-value">{item.salary}</span>
+                  </div>
+                </div>
+
               </div>
 
-              <span
-                className={`status-soft application-${item.status}`}
-              >
-                {item.status.toUpperCase()}
-              </span>
+              {/* RIGHT */}
+              {filter === "all" && (
+                <span
+                  className={`status-soft application-${item.status}`}
+                >
+                  {item.status.toUpperCase()}
+                </span>
+              )}
+
             </div>
           ))
         )}

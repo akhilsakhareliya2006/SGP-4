@@ -1126,6 +1126,33 @@ input[type="date"] {
     gap: 14px;
   }
 }
+/* Job meta section */
+.job-meta {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.job-meta-row {
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.job-meta-label {
+  color: #111212;
+  font-weight: 500;
+  min-width: 65px;
+  font-size: 14px;
+}
+
+.job-meta-value {
+  color: #111111;
+  font-weight: 500;
+  font-size: 14px;
+}
+
 
 /* ================= JOB LIST SCROLL ================= */
 
@@ -1174,4 +1201,49 @@ input[type="date"] {
 .status-soft.application-rejected {
   background: #fee2e2;
   color: #991b1b;
+}
+/* ================= JOB META (LOCATION + SALARY) ================= */
+
+.job-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.job-meta-item {
+  white-space: nowrap;
+}
+
+.job-meta-separator {
+  color: #94a3b8;
+}
+
+/* ===== Job Meta (Applications & Jobs – clean layout) ===== */
+
+.job-meta-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.job-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.job-meta-label {
+  font-weight: 600;
+  color: #020617;
+  min-width: 75px; /* keeps alignment */
+}
+
+.job-meta-value {
+  font-weight: 500;
+  color: #020617;
 }

@@ -4,7 +4,6 @@ import { useOutletContext } from "react-router-dom";
 function JobsPage() {
   const { student } = useOutletContext();
 
-  // ✅ DEFAULT FILTER
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
@@ -13,6 +12,8 @@ function JobsPage() {
       id: 1,
       title: "Frontend Developer",
       company: "Tech Solutions Pvt Ltd",
+      location: "Bangalore, India",
+      salary: "₹6–8 LPA",
       status: "not-applied",
       type: "current",
     },
@@ -20,6 +21,8 @@ function JobsPage() {
       id: 2,
       title: "Backend Developer",
       company: "Innovate Labs",
+      location: "Pune, India",
+      salary: "₹5–7 LPA",
       status: "applied",
       type: "current",
     },
@@ -27,62 +30,18 @@ function JobsPage() {
       id: 3,
       title: "Full Stack Engineer",
       company: "CloudWorks",
+      location: "Remote",
+      salary: "₹7–10 LPA",
       status: "applied",
       type: "past",
     },
-     {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      status: "applied",
-      type: "past",
-    },
-     {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      status: "applied",
-      type: "past",
-    },
-     {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      status: "applied",
-      type: "past",
-    },
-     {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      status: "applied",
-      type: "past",
-    },
-     {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      status: "applied",
-      type: "past",
-    },
-     {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      status: "applied",
-      type: "past",
-    },
-    
   ];
 
-  // ✅ FILTER + SEARCH LOGIC
   const filteredJobs = jobs.filter((job) => {
-    // Search match
     const matchesSearch =
       job.title.toLowerCase().includes(search.toLowerCase()) ||
       job.company.toLowerCase().includes(search.toLowerCase());
 
-    // Filter match
     const matchesFilter =
       filter === "all" ||
       (filter === "applied" && job.status === "applied") ||
@@ -125,18 +84,34 @@ function JobsPage() {
         ) : (
           filteredJobs.map((job) => (
             <div key={job.id} className="job-card-soft">
+              {/* LEFT */}
               <div className="job-info-left">
                 <div className="job-title-soft">{job.title}</div>
                 <div className="job-company-soft">{job.company}</div>
+
+                {/* NEW: location + salary */}
+                <div className="job-meta">
+                  <div className="job-meta-row">
+                    <span className="job-meta-label">Location:</span>
+                    <span className="job-meta-value">{job.location}</span>
+                  </div>
+                  <div className="job-meta-row">
+                    <span className="job-meta-label">Salary:</span>
+                    <span className="job-meta-value">{job.salary}</span>
+                  </div>
+                </div>
+
               </div>
 
-              <span
-                className={`status-soft ${
-                  job.status === "applied" ? "applied" : "not-applied"
-                }`}
-              >
-                {job.status === "applied" ? "Applied" : "Not Applied"}
-              </span>
+              {/* RIGHT – status only for ALL */}
+              {filter === "all" && (
+                <span
+                  className={`status-soft ${job.status === "applied" ? "applied" : "not-applied"
+                    }`}
+                >
+                  {job.status === "applied" ? "Applied" : "Not Applied"}
+                </span>
+              )}
             </div>
           ))
         )}

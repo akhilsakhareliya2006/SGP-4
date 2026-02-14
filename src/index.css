@@ -879,79 +879,88 @@ input[type="date"] {
 }
 /* ================= APPLY PAGE – GRADIENT CARD ================= */
 
+
+/* ================= APPLY PAGE ================= */
+
 .apply-page {
   max-width: 1100px;
   margin: 0 auto;
 }
 
+/* Title (same style as others) */
 .page-title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   color: #0f172a;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
-/* List */
+/* Scrollable list */
 .job-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
-/* Card */
+/* ================= CARD (SAME AS JOBS) ================= */
+
 .job-card-gradient {
-  background: linear-gradient(
-    135deg,
-    #e9f0fb 0%,
-    #f8fbff 45%,
-    #ffffff 100%
-  );
-  border-radius: 18px;
-  padding: 26px 30px;
+  /* rename kept, but style is simple */
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-left: 6px solid #13119a;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* LEFT */
+.job-card-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* ================= LEFT ================= */
+
 .job-left {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .job-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f172a;
+  font-size: 17px;
+  font-weight: 600;
+  color: #020617;
 }
 
 .job-company {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1e40af;
+  font-size: 14px;
+  color: #2563eb;
 }
 
-/* Info */
+/* Meta info (same as jobs/applications) */
 .job-info {
-  margin-top: 14px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .info-row {
   display: flex;
   gap: 10px;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .info-label {
   font-weight: 600;
-  color: #334155;
-  min-width: 100px;
+  color: #020617;
+  min-width: 80px;
 }
 
 .info-value {
@@ -959,35 +968,37 @@ input[type="date"] {
   color: #020617;
 }
 
-/* RIGHT */
+/* ================= RIGHT ================= */
+
 .job-right {
   display: flex;
   align-items: center;
 }
 
+/* Simple Apply Button */
 .apply-btn-gradient {
-  background: linear-gradient(135deg, #2563eb, #1e40af);
+  background: #2563eb;
   color: #ffffff;
   border: none;
-  padding: 12px 34px;
-  font-size: 16px;
-  font-weight: 700;
-  border-radius: 12px;
+  padding: 10px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .apply-btn-gradient:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.45);
+  background: #1e40af;
 }
 
-/* Responsive */
+/* ================= MOBILE ================= */
+
 @media (max-width: 768px) {
   .job-card-gradient {
     flex-direction: column;
     align-items: flex-start;
-    gap: 20px;
+    gap: 14px;
   }
 
   .job-right {
@@ -1001,9 +1012,31 @@ input[type="date"] {
 
 /* ================= CLEAN JOBS PAGE ================= */
 
+/* ================= DASHBOARD LAYOUT (REQUIRED FOR SCROLL) ================= */
+
+.dashboard-root {
+  height: 100vh;
+}
+
+.main-content {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-wrapper {
+  flex: 1;
+  overflow: hidden; /* IMPORTANT */
+}
+
+/* ================= JOBS PAGE ================= */
+
 .jobs-page-clean {
   max-width: 1100px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* Heading */
@@ -1034,7 +1067,7 @@ input[type="date"] {
 .jobs-filters-clean {
   display: flex;
   gap: 10px;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .filter-chip {
@@ -1046,11 +1079,6 @@ input[type="date"] {
   font-weight: 500;
   color: #334155;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.filter-chip:hover {
-  background: #e2e8f0;
 }
 
 .filter-chip.active {
@@ -1058,14 +1086,19 @@ input[type="date"] {
   color: #ffffff;
 }
 
-/* Cards container */
+/* ================= JOB LIST (SCROLL HERE) ================= */
+
 .jobs-cards-clean {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  flex: 1;               /* TAKE REMAINING SPACE */
+  overflow-y: auto;      /* SCROLL ENABLED */
+  padding-right: 6px;
 }
 
-/* Card */
+/* ================= CARD ================= */
+
 .job-card-soft {
   background: #ffffff;
   border-radius: 16px;
@@ -1100,6 +1133,31 @@ input[type="date"] {
   color: #2563eb;
 }
 
+/* Job meta */
+.job-meta {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.job-meta-row {
+  display: flex;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.job-meta-label {
+  color: #020617;
+  font-weight: 500;
+  min-width: 70px;
+}
+
+.job-meta-value {
+  color: #020617;
+  font-weight: 500;
+}
+
 /* Status */
 .status-soft {
   padding: 7px 16px;
@@ -1118,7 +1176,8 @@ input[type="date"] {
   color: #991b1b;
 }
 
-/* Mobile */
+/* ================= MOBILE ================= */
+
 @media (max-width: 768px) {
   .job-card-soft {
     flex-direction: column;
@@ -1126,42 +1185,7 @@ input[type="date"] {
     gap: 14px;
   }
 }
-/* Job meta section */
-.job-meta {
-  margin-top: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 
-.job-meta-row {
-  display: flex;
-  gap: 6px;
-  font-size: 13px;
-}
-
-.job-meta-label {
-  color: #111212;
-  font-weight: 500;
-  min-width: 65px;
-  font-size: 14px;
-}
-
-.job-meta-value {
-  color: #111111;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-
-/* ================= JOB LIST SCROLL ================= */
-
-/* Container height control */
-.jobs-cards-clean {
-  max-height: calc(100vh - 260px);
-  overflow-y: auto;
-  padding-right: 6px;
-}
 
 /* ================= MENTOR STATUS COLORS ================= */
 
@@ -1246,4 +1270,79 @@ input[type="date"] {
 .job-meta-value {
   font-weight: 500;
   color: #020617;
+}
+
+/* ================= COLLEGE STUDENTS PAGE ================= */
+
+.college-students-page {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.page-heading {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #0f172a;
+}
+
+/* Upload Card */
+.upload-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.upload-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #020617;
+}
+
+/* Form */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #020617;
+}
+
+.form-input,
+.form-select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* Upload Button */
+.upload-btn {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.upload-btn:hover {
+  background: #1e40af;
 }

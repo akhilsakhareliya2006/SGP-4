@@ -35,6 +35,24 @@ function JobsPage() {
       status: "applied",
       type: "past",
     },
+     {
+      id: 3,
+      title: "Full Stack Engineer",
+      company: "CloudWorks",
+      location: "Remote",
+      salary: "₹7–10 LPA",
+      status: "applied",
+      type: "past",
+    },
+     {
+      id: 3,
+      title: "Full Stack Engineer",
+      company: "CloudWorks",
+      location: "Remote",
+      salary: "₹7–10 LPA",
+      status: "applied",
+      type: "past",
+    },
   ];
 
   const filteredJobs = jobs.filter((job) => {

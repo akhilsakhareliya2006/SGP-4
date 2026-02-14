@@ -66,7 +66,7 @@ function MentorApprovedPage() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-
+      
       {/* Filters */}
       <div className="jobs-filters-clean">
         {["all", "pending", "approved", "rejected"].map((f) => (

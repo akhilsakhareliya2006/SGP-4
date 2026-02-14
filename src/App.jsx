@@ -88,15 +88,15 @@ function App() {
         </Route>
 
         {/* ---------- College Dashboard ---------- */}
-        <Route path="/student" element={<StudentDashboardLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
 
-          <Route path="dashboard" element={<StudentDashboard />} />
-          <Route path="apply" element={<StudentApplyPage />} />
-          <Route path="jobs" element={<StudentJobsPage />} />
-          <Route path="applications" element={<StudentApplicationsPage />} />
-          <Route path="mentor-approved" element={<StudentMentorApprovedPage />} />
-          <Route path="profile" element={<StudentProfilePage />} />
+        <Route path="/college" element={<CollegeDashboardLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<CollegeDashboard />} />
+          <Route path="mentors" element={<MentorsPage />} />
+          <Route path="jobs" element={<CollegeJobsPage />} />
+          <Route path="students" element={<StudentsPage />} />
+          <Route path="collaboration" element={<CollegeCollaborationPage />} />
+          <Route path="admin-settings" element={<CollegeAdminSettingsPage />} />
         </Route>
 
 

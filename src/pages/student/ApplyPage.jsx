@@ -1,58 +1,145 @@
-import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useOutletContext, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function ApplyPage() {
   const { student } = useOutletContext();
 
   const [search, setSearch] = useState("");
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
+  const [applyLoading, setApplyLoading] = useState(false);
 
-  const jobs = [
-    {
-      id: 1,
-      title: "Frontend Developer",
-      company: "Tech Solutions Pvt Ltd",
-      location: "Bangalore, India",
-      salary: "₹6–8 LPA",
-      dueDate: "30 Sep 2026",
-    },
-    {
-      id: 2,
-      title: "Backend Developer",
-      company: "Innovate Labs",
-      location: "Pune, India",
-      salary: "₹5–7 LPA",
-      dueDate: "15 Oct 2026",
-    },
-    {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      location: "Remote",
-      salary: "₹7–10 LPA",
-      dueDate: "10 Oct 2026",
-    },
-    {
-      id: 4,
-      title: "UI Engineer",
-      company: "NextGen Systems",
-      location: "Ahmedabad, India",
-      salary: "₹4–6 LPA",
-      dueDate: "10 Oct 2026",
-    },
-  ];
+  const token = student?.token || localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("accessToken");
+  const navigate = useNavigate();
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  useEffect(() => {
+    // fetch jobs from API; fallback to local dummy data on failure
+    const fetchJobs = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const headers = token
+          ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+          : { "Content-Type": "application/json" };
+
+        const res = await axios.get(`${apiUrl}/api/student/jobs`, { headers, withCredentials: true });
+        const payload = res.data?.data ?? res.data;
+        setJobs(Array.isArray(payload?.jobs) ? payload.jobs : []);
+      } catch (err) {
+        console.log(err);
+        if (err?.response?.status === 401) {
+          setError("Unauthorized — please login");
+          navigate("/auth/login");
+          return;
+        }
+        setError(null);
+        setJobs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+ 
+
+  const handleApply = async (jobId) => {
+    // fetch job detail using the API route noted by backend: /job/:jobId
+    setDetailLoading(true);
+    setSelectedJob(null);
+    setShowDetail(true);
+    try {
+      // Try common possible endpoints; adapt depending on server mount
+      const endpoints =[ `${apiUrl}/api/student/job/${jobId}`];
+      let data = null;
+      const headers = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+      for (const ep of endpoints) {
+        try {
+          const resp = await axios.get(ep, { headers, withCredentials: true });
+          if (resp && resp.status >= 200 && resp.status < 300) {
+            data = resp.data?.data ?? resp.data;
+            break;
+          }
+        } catch (e) {
+          if (e?.response?.status === 401) {
+            setError("Unauthorized — please login");
+            navigate("/auth/login");
+            return;
+          }
+          // try next
+        }
+      }
+
+      if (!data) {
+        // fallback: find from local jobs
+        const found = jobs.find((j) => String(j.id) === String(jobId));
+        setSelectedJob(found || { id: jobId, title: "Unknown Job" });
+      } else {
+        setSelectedJob(data);
+      }
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const applyToJob = async (jobId) => {
+    if (!jobId) {
+      alert("Unable to determine job id to apply");
+      return;
+    }
+    setApplyLoading(true);
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+      const res = await axios.post(`${apiUrl}/api/student/apply/${jobId}`, {}, { headers, withCredentials: true });
+      if (res && res.status >= 200 && res.status < 300) {
+        const payload = res.data?.data ?? res.data;
+        alert(payload?.message || res.data?.message || "Applied successfully");
+        setShowDetail(false);
+        // optionally update job state here (e.g., mark as applied)
+      } else {
+        alert("Apply failed");
+      }
+    } catch (err) {
+      console.error(err);
+      if (err?.response?.status === 401) {
+        setError("Unauthorized — please login");
+        navigate("/auth/login");
+        return;
+      }
+      alert(err?.response?.data?.message || "Apply failed");
+    } finally {
+      setApplyLoading(false);
+    }
+  };
 
   // SEARCH LOGIC
   const filteredJobs = jobs.filter(
     (job) =>
-      job.title.toLowerCase().includes(search.toLowerCase()) ||
-      job.company.toLowerCase().includes(search.toLowerCase())
+      job.title?.toLowerCase().includes(search.toLowerCase()) ||
+      job.company?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const renderField = (val) => {
+    if (val === null || val === undefined) return "";
+    if (typeof val === "string" || typeof val === "number") return val;
+    if (typeof val === "object") {
+      // prefer common name/title fields
+      return val.name ?? val.title ?? val.companyName ?? JSON.stringify(val);
+    }
+    return String(val);
+  };
 
   return (
     <div className="apply-page">
       <h2 className="page-title">Apply for Jobs</h2>
 
-      {/* SEARCH */}
       <input
         className="jobs-search-input"
         placeholder="Search jobs..."
@@ -60,42 +147,80 @@ function ApplyPage() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {/* SCROLLABLE LIST */}
       <div className="job-list">
-        {filteredJobs.length === 0 ? (
+        {loading ? (
+          <p style={{ color: "#64748b" }}>Loading jobs...</p>
+        ) : filteredJobs.length === 0 ? (
           <p style={{ color: "#64748b" }}>No jobs found.</p>
         ) : (
           filteredJobs.map((job) => (
             <div key={job.id} className="job-card-gradient">
-              {/* LEFT */}
               <div className="job-left">
-                <div className="job-title">{job.title}</div>
-                <div className="job-company">{job.company}</div>
+                <div className="job-title">{renderField(job.title)}</div>
+                <div className="job-company">{renderField(job.company)}</div>
 
                 <div className="job-info">
                   <div className="info-row">
                     <span className="info-label">Location:</span>
-                    <span className="info-value">{job.location}</span>
+                    <span className="info-value">{renderField(job.location)}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">Salary:</span>
-                    <span className="info-value">{job.salary}</span>
+                    <span className="info-value">{renderField(job.salary)}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">Last Date:</span>
-                    <span className="info-value">{job.dueDate}</span>
+                    <span className="info-value">{renderField(job.dueDate)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* RIGHT */}
               <div className="job-right">
-                <button className="apply-btn-gradient">Apply</button>
+                <button
+                  className="apply-btn-gradient"
+                  onClick={() => handleApply(job.id)}
+                >
+                  Apply
+                </button>
+               
               </div>
             </div>
           ))
         )}
       </div>
+
+      {/* Job detail modal */}
+      {showDetail && (
+        <div className="job-detail-modal" style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}>
+          <div style={{ width: 720, maxWidth: "95%", background: "#fff", borderRadius: 8, padding: 20 }}>
+            <button style={{ float: "right" }} onClick={() => { setShowDetail(false); setSelectedJob(null); }}>
+              Close
+            </button>
+            {detailLoading ? (
+              <p>Loading details...</p>
+            ) : selectedJob ? (
+              <div>
+                <h3 style={{ marginTop: 0 }}>{renderField(selectedJob.title)}</h3>
+                <p style={{ color: "#64748b" }}>{renderField(selectedJob.company)}</p>
+                <p><strong>Location:</strong> {renderField(selectedJob.location)}</p>
+                <p><strong>Salary:</strong> {renderField(selectedJob.salary)}</p>
+                <p><strong>Last Date:</strong> {renderField(selectedJob.dueDate)}</p>
+                <div style={{ marginTop: 12 }}>
+                  <strong>Job description</strong>
+                  <p>{renderField(selectedJob.description) || renderField(selectedJob.jobDescription) || "No description provided."}</p>
+                </div>
+                <div style={{ marginTop: 16 }}>
+                  <button className="confirm-apply-btn" onClick={() => applyToJob(selectedJob?.id || selectedJob?._id || selectedJob?.jobId)} disabled={applyLoading}>
+                    {applyLoading ? "Applying..." : "Confirm Apply"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p>No job details available.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

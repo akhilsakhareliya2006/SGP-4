@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 
 function JobsPage() {
@@ -6,6 +6,8 @@ function JobsPage() {
 
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+
+  
 
   const jobs = [
     {

@@ -61,7 +61,17 @@ const Login = () => {
         return;
       }
 
-      // later: store token
+      // store token and user data
+      const token = data?.token || data?.data?.token || data?.data?.accessToken || data?.accessToken;
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+      // also save returned user payload (if present)
+      if (data?.data) {
+        localStorage.setItem("user", JSON.stringify(data.data));
+      }
+
+      if (data.data?.role === "student") navigate("/student");
       if(data.data.role==="companyAdmin") navigate("/company");
       if(data.data.role==="collegeAdmin") navigate("/college");
     

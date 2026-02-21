@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 
 function ApplyPage() {
@@ -14,21 +15,34 @@ function ApplyPage() {
   const [showDetail, setShowDetail] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
 
-  const token = student?.token || localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("accessToken");
+  const token =
+    student?.token ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("accessToken");
+
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+  const idempotencyKeyRef = useRef(null);
+
+  /* ================= FETCH JOBS (NO IDEMPOTENCY) ================= */
   useEffect(() => {
-    // fetch jobs from API; fallback to local dummy data on failure
     const fetchJobs = async () => {
       setLoading(true);
       setError(null);
-      try {
-        const headers = token
-          ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
-          : { "Content-Type": "application/json" };
 
-        const res = await axios.get(`${apiUrl}/api/student/jobs`, { headers, withCredentials: true });
+      try {
+        const headers = {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        };
+
+        const res = await axios.get(
+          `${apiUrl}/api/student/jobs`,
+          { headers, withCredentials: true }
+        );
+
         const payload = res.data?.data ?? res.data;
         setJobs(Array.isArray(payload?.jobs) ? payload.jobs : []);
       } catch (err) {
@@ -38,7 +52,6 @@ function ApplyPage() {
           navigate("/auth/login");
           return;
         }
-        setError(null);
         setJobs([]);
       } finally {
         setLoading(false);
@@ -48,22 +61,28 @@ function ApplyPage() {
     fetchJobs();
   }, []);
 
- 
-
+  /* ================= JOB DETAILS ================= */
   const handleApply = async (jobId) => {
-    // fetch job detail using the API route noted by backend: /job/:jobId
     setDetailLoading(true);
     setSelectedJob(null);
     setShowDetail(true);
+
     try {
-      // Try common possible endpoints; adapt depending on server mount
-      const endpoints =[ `${apiUrl}/api/student/job/${jobId}`];
+      const endpoints = [`${apiUrl}/api/student/job/${jobId}`];
       let data = null;
-      const headers = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+
       for (const ep of endpoints) {
         try {
-          const resp = await axios.get(ep, { headers, withCredentials: true });
-          if (resp && resp.status >= 200 && resp.status < 300) {
+          const resp = await axios.get(ep, {
+            headers,
+            withCredentials: true,
+          });
+          if (resp.status >= 200 && resp.status < 300) {
             data = resp.data?.data ?? resp.data;
             break;
           }
@@ -73,12 +92,10 @@ function ApplyPage() {
             navigate("/auth/login");
             return;
           }
-          // try next
         }
       }
 
       if (!data) {
-        // fallback: find from local jobs
         const found = jobs.find((j) => String(j.id) === String(jobId));
         setSelectedJob(found || { id: jobId, title: "Unknown Job" });
       } else {
@@ -89,20 +106,42 @@ function ApplyPage() {
     }
   };
 
+  /* ================= APPLY TO JOB (IDEMPOTENT) ================= */
   const applyToJob = async (jobId) => {
     if (!jobId) {
       alert("Unable to determine job id to apply");
       return;
     }
+
     setApplyLoading(true);
+
+    // ✅ generate ONCE per apply attempt
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = uuidv4();
+    }
+
     try {
-      const headers = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
-      const res = await axios.post(`${apiUrl}/api/student/apply/${jobId}`, {}, { headers, withCredentials: true });
-      if (res && res.status >= 200 && res.status < 300) {
+      const headers = {
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKeyRef.current,
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+
+      const res = await axios.post(
+        `${apiUrl}/api/student/apply/${jobId}`,
+        {},
+        { headers, withCredentials: true }
+      );
+      console.log(res);
+      
+
+      if (res.status >= 200 && res.status < 300) {
         const payload = res.data?.data ?? res.data;
         alert(payload?.message || res.data?.message || "Applied successfully");
         setShowDetail(false);
-        // optionally update job state here (e.g., mark as applied)
+
+        // ✅ reset key after success
+        idempotencyKeyRef.current = null;
       } else {
         alert("Apply failed");
       }
@@ -119,7 +158,7 @@ function ApplyPage() {
     }
   };
 
-  // SEARCH LOGIC
+  /* ================= SEARCH ================= */
   const filteredJobs = jobs.filter(
     (job) =>
       job.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -129,13 +168,12 @@ function ApplyPage() {
   const renderField = (val) => {
     if (val === null || val === undefined) return "";
     if (typeof val === "string" || typeof val === "number") return val;
-    if (typeof val === "object") {
-      // prefer common name/title fields
+    if (typeof val === "object")
       return val.name ?? val.title ?? val.companyName ?? JSON.stringify(val);
-    }
     return String(val);
   };
 
+  /* ================= UI (UNCHANGED) ================= */
   return (
     <div className="apply-page">
       <h2 className="page-title">Apply for Jobs</h2>
@@ -162,15 +200,21 @@ function ApplyPage() {
                 <div className="job-info">
                   <div className="info-row">
                     <span className="info-label">Location:</span>
-                    <span className="info-value">{renderField(job.location)}</span>
+                    <span className="info-value">
+                      {renderField(job.location)}
+                    </span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">Salary:</span>
-                    <span className="info-value">{renderField(job.salary)}</span>
+                    <span className="info-value">
+                      {renderField(job.salary)}
+                    </span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">Last Date:</span>
-                    <span className="info-value">{renderField(job.dueDate)}</span>
+                    <span className="info-value">
+                      {renderField(job.dueDate)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -182,35 +226,78 @@ function ApplyPage() {
                 >
                   Apply
                 </button>
-               
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Job detail modal */}
       {showDetail && (
-        <div className="job-detail-modal" style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}>
-          <div style={{ width: 720, maxWidth: "95%", background: "#fff", borderRadius: 8, padding: 20 }}>
-            <button style={{ float: "right" }} onClick={() => { setShowDetail(false); setSelectedJob(null); }}>
+        <div
+          className="job-detail-modal"
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <div
+            style={{
+              width: 720,
+              maxWidth: "95%",
+              background: "#fff",
+              borderRadius: 8,
+              padding: 20,
+            }}
+          >
+            <button
+              style={{ float: "right" }}
+              onClick={() => {
+                setShowDetail(false);
+                setSelectedJob(null);
+              }}
+            >
               Close
             </button>
+
             {detailLoading ? (
               <p>Loading details...</p>
             ) : selectedJob ? (
               <div>
-                <h3 style={{ marginTop: 0 }}>{renderField(selectedJob.title)}</h3>
-                <p style={{ color: "#64748b" }}>{renderField(selectedJob.company)}</p>
-                <p><strong>Location:</strong> {renderField(selectedJob.location)}</p>
-                <p><strong>Salary:</strong> {renderField(selectedJob.salary)}</p>
-                <p><strong>Last Date:</strong> {renderField(selectedJob.dueDate)}</p>
-                <div style={{ marginTop: 12 }}>
-                  <strong>Job description</strong>
-                  <p>{renderField(selectedJob.description) || renderField(selectedJob.jobDescription) || "No description provided."}</p>
-                </div>
+                <h3 style={{ marginTop: 0 }}>
+                  {renderField(selectedJob.title)}
+                </h3>
+                <p style={{ color: "#64748b" }}>
+                  {renderField(selectedJob.company)}
+                </p>
+                <p>
+                  <strong>Location:</strong>{" "}
+                  {renderField(selectedJob.location)}
+                </p>
+                <p>
+                  <strong>Salary:</strong>{" "}
+                  {renderField(selectedJob.salary)}
+                </p>
+                <p>
+                  <strong>Last Date:</strong>{" "}
+                  {renderField(selectedJob.dueDate)}
+                </p>
+
                 <div style={{ marginTop: 16 }}>
-                  <button className="confirm-apply-btn" onClick={() => applyToJob(selectedJob?.id || selectedJob?._id || selectedJob?.jobId)} disabled={applyLoading}>
+                  <button
+                    className="confirm-apply-btn"
+                    onClick={() =>
+                      applyToJob(
+                        selectedJob?.id ||
+                          selectedJob?._id ||
+                          selectedJob?.jobId
+                      )
+                    }
+                    disabled={applyLoading}
+                  >
                     {applyLoading ? "Applying..." : "Confirm Apply"}
                   </button>
                 </div>

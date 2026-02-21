@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { FiMapPin } from "react-icons/fi";
 
 /* ---------- Status Badge Component ---------- */
 function StatusBadge({ status, onSend, isSending }) {
@@ -10,8 +11,8 @@ function StatusBadge({ status, onSend, isSending }) {
     case "NOT APPLIED":
     case "NOT_APPLIED":
       return (
-        <button 
-          className="status-pill collaborate" 
+        <button
+          className="status-pill collaborate"
           onClick={onSend}
           disabled={isSending}
         >
@@ -61,7 +62,7 @@ function CollaborationPage() {
         credentials: "include",
       });
 
-      
+
 
       const data = await res.json();
       console.log(data)
@@ -74,7 +75,7 @@ function CollaborationPage() {
           ...college,
           status: filter === "ALL" ? college.status : filter // Inject status if missing
         }));
-        
+
         setColleges(mappedData);
       }
     } catch (error) {
@@ -104,7 +105,7 @@ function CollaborationPage() {
 
       if (res.ok) {
         // Optimistic Update: Update the UI immediately without re-fetching
-        setColleges(prev => prev.map(c => 
+        setColleges(prev => prev.map(c =>
           c.id === collegeId ? { ...c, status: "PENDING" } : c
         ));
       } else {
@@ -179,17 +180,24 @@ function CollaborationPage() {
           {filteredColleges.map((college) => (
             <div key={college.id} className="college-card">
               <div className="college-left">
+
                 <div className="college-logo">
                   {college.name ? college.name.charAt(0) : "C"}
                 </div>
 
-                <div>
-                  <div className="college-name">{college.name}</div>
-                  <div className="college-address">{college.address}</div>
+                <div className="college-info">
+                  <div className="college-name">
+                    {college.name}
+                  </div>
+
+                  <div className="college-address">
+                    <FiMapPin className="location-icon" />
+                    {college.address}
+                  </div>
                 </div>
+
               </div>
 
-              {/* Status Badge */}
               <div className="college-right">
                 <StatusBadge
                   status={college.status}

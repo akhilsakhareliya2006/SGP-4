@@ -29,7 +29,7 @@ function CompanyJobsPage() {
         });
         const data = await res.json().catch(() => ({}));
         console.log(data);
-        
+
         setJobs(data.data.jobs); // ApiResponse → data
       } catch (err) {
         console.error(err);
@@ -42,11 +42,11 @@ function CompanyJobsPage() {
   }, [filter]);
 
   // 🔹 Frontend search
- const filteredJobs = useMemo(() => {
-  return (jobs || []).filter((job) =>
-    job.title?.toLowerCase().includes(search.toLowerCase())
-  );
-}, [jobs, search]);
+  const filteredJobs = useMemo(() => {
+    return (jobs || []).filter((job) =>
+      job.title?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [jobs, search]);
 
 
   return (
@@ -92,10 +92,15 @@ function CompanyJobsPage() {
               <div className="job-info">
                 <h4>{job.title}</h4>
                 <p className="job-company">{job.college?.name}</p>
-                <p>Salary: ₹{job.salary}</p>
+
+                <p>
+                  Salary: ₹{Number(job.salary).toLocaleString("en-IN")}
+                </p>
+
                 <p>
                   Due Date: {new Date(job.dueDate).toLocaleDateString()}
                 </p>
+
                 <p className="created-at">
                   Created: {new Date(job.createdAt).toLocaleDateString()}
                 </p>

@@ -1,14 +1,12 @@
+
+
 import React, { useState } from "react";
 import TextInput from "../../components/TextInput";
 import { Link, useNavigate } from "react-router-dom";
 
-
-
-
 const Login = () => {
   const navigate = useNavigate();
-  const apiUrl = import.meta.env.VITE_API_URL
-
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const [form, setForm] = useState({
     email: "",
@@ -16,9 +14,13 @@ const Login = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState(""); // ✅ NEW
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
+    setServerError(""); // ✅ clear backend error while typing
+
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -42,42 +44,51 @@ const Login = () => {
 
     try {
       setLoading(true);
+      setServerError("");
 
       const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials:"include",
+        credentials: "include", // remove if not using cookies
         body: JSON.stringify(form),
       });
 
       const data = await res.json();
-      console.log(data.data.role);
-      
 
       if (!res.ok) {
-        alert(data.message || "Login failed");
+        setServerError(data.message || "Incorrect email or password");
         return;
       }
 
-      // store token and user data
-      const token = data?.token || data?.data?.token || data?.data?.accessToken || data?.accessToken;
+      // ✅ Store token
+      const token =
+        data?.token ||
+        data?.data?.token ||
+        data?.data?.accessToken ||
+        data?.accessToken;
+
       if (token) {
         localStorage.setItem("token", token);
       }
-      // also save returned user payload (if present)
+
+      // ✅ Store user
       if (data?.data) {
         localStorage.setItem("user", JSON.stringify(data.data));
       }
 
-      if (data.data?.role === "student") navigate("/student");
-      if(data.data.role==="companyAdmin") navigate("/company");
-      if(data.data.role==="collegeAdmin") navigate("/college");
-    
+      // ✅ Role based navigation
+      const role = data?.data?.role;
+
+      if (role === "student") navigate("/student");
+      else if (role === "companyAdmin") navigate("/company");
+      else if (role === "collegeAdmin") navigate("/college");
+      else navigate("/");
+
     } catch (error) {
       console.error("Login error:", error);
-      alert("Something went wrong!");
+      setServerError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -111,13 +122,22 @@ const Login = () => {
             <TextInput
               label="Password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={form.password}
               onChange={handleChange}
               placeholder="Enter your password"
               required
               error={errors.password}
+              showPasswordToggle={true}
+              togglePassword={() => setShowPassword(!showPassword)}
             />
+
+            {/* ✅ SERVER ERROR MESSAGE */}
+            {serverError && (
+              <div className="auth-error">
+                {serverError}
+              </div>
+            )}
 
             <div className="auth-forgot">Forgot password?</div>
 

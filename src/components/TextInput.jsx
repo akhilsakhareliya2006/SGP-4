@@ -3,32 +3,38 @@ import React from "react";
 const TextInput = ({
   label,
   name,
-  type = "text",
+  type,
   value,
   onChange,
   placeholder,
-  required = false,
+  required,
   error,
+  showPasswordToggle,
+  togglePassword,
 }) => {
   return (
     <div className="form-group">
-      {label && (
-        <label className="form-label">
-          {label}
-          {required && <span className="required">*</span>}
-        </label>
-      )}
+      <label>{label}</label>
 
-      <input
-        className={`form-input ${error ? "input-error" : ""}`}
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-      />
+      <div className="input-wrapper">
+        <input
+          name={name}
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          className={`form-input ${error ? "input-error" : ""}`}
+        />
 
-      {error && <div className="form-error">{error}</div>}
+        {showPasswordToggle && (
+          <span className="password-toggle" onClick={togglePassword}>
+            👁
+          </span>
+        )}
+      </div>
+
+      {error && <p className="input-error-text">{error}</p>}
     </div>
   );
 };

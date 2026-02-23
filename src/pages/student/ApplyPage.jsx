@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import { FiMapPin, FiDollarSign, FiCalendar } from "react-icons/fi";
 
 function ApplyPage() {
   const { student } = useOutletContext();
@@ -133,7 +134,7 @@ function ApplyPage() {
         { headers, withCredentials: true }
       );
       console.log(res);
-      
+
 
       if (res.status >= 200 && res.status < 300) {
         const payload = res.data?.data ?? res.data;
@@ -191,44 +192,57 @@ function ApplyPage() {
         ) : filteredJobs.length === 0 ? (
           <p style={{ color: "#64748b" }}>No jobs found.</p>
         ) : (
-          filteredJobs.map((job) => (
-            <div key={job.id} className="job-card-gradient">
-              <div className="job-left">
-                <div className="job-title">{renderField(job.title)}</div>
-                <div className="job-company">{renderField(job.company)}</div>
+          filteredJobs.map((job) => {
+            const formattedSalary = job.salary
+              ? `₹${Number(job.salary).toLocaleString("en-IN")}`
+              : "N/A";
 
-                <div className="job-info">
-                  <div className="info-row">
-                    <span className="info-label">Location:</span>
-                    <span className="info-value">
-                      {renderField(job.location)}
-                    </span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Salary:</span>
-                    <span className="info-value">
-                      {renderField(job.salary)}
-                    </span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Last Date:</span>
-                    <span className="info-value">
-                      {renderField(job.dueDate)}
-                    </span>
+            const formattedDate = job.dueDate
+              ? new Date(job.dueDate).toLocaleDateString("en-GB")
+              : "N/A";
+
+            return (
+              <div key={job.id} className="job-card-gradient">
+                <div className="job-left">
+                  <div className="job-title">{renderField(job.title)}</div>
+                  <div className="job-company">{renderField(job.company)}</div>
+
+                  <div className="job-info">
+                    <div className="info-row">
+                      <span className="info-label">Location :</span>
+                      <span className="info-value">
+                        {renderField(job.location)}
+                      </span>
+                    </div>
+
+                    <div className="info-row">
+                      <span className="info-label">Salary :</span>
+                      <span className="info-value">
+                        {formattedSalary}
+                      </span>
+                    </div>
+
+                    <div className="info-row">
+                      <span className="info-label">Last Date :</span>
+                      <span className="info-value">
+                        {formattedDate}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="job-right">
-                <button
-                  className="apply-btn-gradient"
-                  onClick={() => handleApply(job.id)}
-                >
-                  Apply
-                </button>
+                <div className="job-right">
+                  <button
+                    type="button"
+                    className="apply-btn-gradient"
+                    onClick={() => handleApply(job.id)}
+                  >
+                    Apply
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -292,8 +306,8 @@ function ApplyPage() {
                     onClick={() =>
                       applyToJob(
                         selectedJob?.id ||
-                          selectedJob?._id ||
-                          selectedJob?.jobId
+                        selectedJob?._id ||
+                        selectedJob?.jobId
                       )
                     }
                     disabled={applyLoading}

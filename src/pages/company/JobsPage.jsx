@@ -75,7 +75,7 @@ function CompanyJobsPage() {
       </div>
 
       {/* Job List */}
-      <div className="jobs-list">
+      <div className="jobs-list">vs
         {loading && <div className="empty-state">Loading...</div>}
 
         {!loading && filteredJobs.length === 0 && (

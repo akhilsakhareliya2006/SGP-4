@@ -112,11 +112,11 @@ function JobsPage() {
                 {/* NEW: location + salary */}
                 <div className="job-meta">
                   <div className="job-meta-row">
-                    <span className="job-meta-label">Location:</span>
+                    <span className="job-meta-label">Location :</span>
                     <span className="job-meta-value">{job.location}</span>
                   </div>
                   <div className="job-meta-row">
-                    <span className="job-meta-label">Salary:</span>
+                    <span className="job-meta-label">Salary :</span>
                     <span className="job-meta-value">{job.salary}</span>
                   </div>
                 </div>

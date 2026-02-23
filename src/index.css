@@ -1022,13 +1022,13 @@ input[type="date"] {
 
 /* Simple Apply Button */
 .apply-btn-gradient {
-  background: #2563eb;
+  background: #0a2a6f;
   color: #ffffff;
   border: none;
   padding: 10px 22px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: 20px;
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -1180,7 +1180,7 @@ input[type="date"] {
 
 /* Job meta */
 .job-meta {
-  margin-top: 6px;
+  margin-top: 3px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1196,22 +1196,27 @@ input[type="date"] {
   color: #020617;
   font-weight: 500;
   min-width: 70px;
+  font-size: 14px;
+
 }
 
 .job-meta-value {
   color: #020617;
   font-weight: 500;
+  font-size: 14px;
+  padding-left: 0px;
 }
 
 /* Status */
 .status-soft {
   padding: 7px 16px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .status-soft.applied {
+  
   background: #dcfce7;
   color: #166534;
 }

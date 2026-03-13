@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
-
+import {  useNavigate, useOutletContext } from "react-router-dom";
 import gridIcon from "../../assets/icons/grid.png";
 import listIcon from "../../assets/icons/list.png";
 import exportIcon from "../../assets/icons/export.png";
@@ -16,18 +15,14 @@ function getInitials(name) {
     .join("");
 }
 
-const SAMPLE_MENTORS = [
-  { id: "1", name: "Asha Patel ", email: "akhilsakhareliya1234@example.com" },
-  { id: "2", name: "Rohit Kumar", email: "rohit.kumar@example.com" },
-  { id: "3", name: "Simran Kaur", email: "simran.kaur@example.com" },
-  { id: "4", name: "Vikram Singh", email: "vikram.singh@example.com" },
-  { id: "5", name: "Neha Sharma", email: "neha.sharma@example.com" },
-  { id: "6", name: "Neha Sharma", email: "neha.sharma@example.com" },
-  { id: "7", name: "Neha Sharma", email: "neha.sharma@example.com" },
-  { id: "8", name: "Neha Sharma", email: "neha.sharma@example.com" },
-
-
-];
+function getColorIndex(id) {
+  if (!id) return 0;
+  return (
+    Math.abs(
+      id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)
+    ) % 5
+  );
+}
 
 function MentorsPage() {
   const { college } = useOutletContext();
@@ -47,6 +42,34 @@ function MentorsPage() {
 
   const [isCreating, setIsCreating] = useState(false);
 
+  /* ---------- FETCH MENTORS ---------- */
+  const fetchMentors = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/api/college/mentors`, {
+        credentials: "include",
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch mentors");
+      }
+
+      const mentorsList = data?.data?.mentors || [];
+
+      setMentors(Array.isArray(mentorsList) ? mentorsList : []);
+    } catch (err) {
+      console.error("Fetch mentors error:", err);
+      setMentors([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMentors();
+  }, [apiUrl]);
+
   /* ---------- CREATE MENTOR ---------- */
   const handleCreateMentor = async (e) => {
     e.preventDefault();
@@ -55,15 +78,12 @@ function MentorsPage() {
     setIsCreating(true);
 
     try {
-      const res = await fetch(
-        `${apiUrl}/api/college/create/mentor`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(formData),
-        }
-      );
+      const res = await fetch(`${apiUrl}/api/college/create/mentor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(formData),
+      });
 
       const data = await res.json();
 
@@ -74,8 +94,7 @@ function MentorsPage() {
       setShowAddModal(false);
       setFormData({ name: "", email: "" });
 
-      // refresh list
-      fetchMentors();
+      await fetchMentors();
     } catch (err) {
       alert(err.message || "Something went wrong");
     } finally {
@@ -83,26 +102,25 @@ function MentorsPage() {
     }
   };
 
+  /* ---------- EXPORT CSV ---------- */
   const exportMentors = async () => {
     try {
-      const res = await fetch(
-        `${apiUrl}/api/college/export/mentors`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+      const res = await fetch(`${apiUrl}/api/college/export/mentors`, {
+        method: "GET",
+        credentials: "include",
+      });
 
       if (!res.ok) {
         throw new Error("Export failed");
       }
-
+      
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
 
       const a = document.createElement("a");
       a.href = url;
       a.download = "mentors.csv";
+
       document.body.appendChild(a);
       a.click();
 
@@ -114,60 +132,32 @@ function MentorsPage() {
     }
   };
 
-
-  /* ---------- Fetch Mentors ---------- */
-  useEffect(() => {
-    const fetchMentors = async () => {
-      try {
-        const res = await fetch(`${apiUrl}/api/college/mentors`, {
-          credentials: "include",
-        });
-
-        const data = await res.json();
-        console.log("API response:", data);
-
-        if (
-          data?.data?.mentors &&
-          Array.isArray(data.data.mentors) &&
-          data.data.mentors.length > 0
-        ) {
-          setMentors(data.data.mentors);
-        } else {
-          setMentors(SAMPLE_MENTORS);
-        }
-      } catch (err) {
-        console.error(err);
-        setMentors(SAMPLE_MENTORS);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMentors();
-  }, [apiUrl]);
-
-
-  /* ---------- Search ---------- */
+  /* ---------- SEARCH ---------- */
   const filteredMentors = useMemo(() => {
     return mentors.filter((m) =>
-      [m.name, m.email, m.id]
+      [m?.name, m?.email, m?.id]
         .join(" ")
         .toLowerCase()
         .includes(search.toLowerCase())
     );
   }, [mentors, search]);
 
+  const navigate = useNavigate();
   if (isLoading) {
     return <div className="dashboard-loading">Loading mentors...</div>;
   }
-
+  
   return (
+    
     <div className="mentors-page">
-      {/* ================= TOP CARD ================= */}
+      {/* ================= HEADER ================= */}
       <div className="card mentors-header-card">
         <div className="header-row">
           <div>
-            <h2 className="page-title"> Mentors</h2>
+            <h2 className="page-title">
+              Mentors ({mentors.length})
+            </h2>
+
             <p className="page-subtitle">
               Manage mentors for <strong>{college?.name}</strong>
             </p>
@@ -178,7 +168,6 @@ function MentorsPage() {
               <img src={exportIcon} alt="Export" />
               Export
             </button>
-
 
             <button
               className="btn-primary"
@@ -213,11 +202,10 @@ function MentorsPage() {
               <img src={listIcon} alt="List" />
             </button>
           </div>
-
         </div>
       </div>
 
-      {/* ================= LIST CARD (header + rows in same card) ================= */}
+      {/* ================= LIST VIEW ================= */}
       {viewMode === "list" ? (
         <div className="card mentors-list-card">
           <div className="mentors-header-grid">
@@ -228,38 +216,58 @@ function MentorsPage() {
           </div>
 
           <div className="mentors-rows">
-            {filteredMentors.map((m, i) => (
-              <div className="mentor-row" key={m.id}>
-                <div className="col id-col">{m.id.slice(0, 4)}</div>
-                <div className="col name-col">
-                  <div className="mentor-cell">
-                    <span className={`avatar color-${i % 5}`}>
-                      {getInitials(m.name)}
-                    </span>
-                    <span className="name-text">{m.name}</span>
+            {filteredMentors.length === 0 ? (
+              <div className="empty-state">No mentors found</div>
+            ) : (
+              filteredMentors.map((m) => {
+                const colorIndex = getColorIndex(m.id);
+
+                return (
+                  <div className="mentor-row" key={m.id} onClick={() => navigate(`/college/mentors/${m.id}`)} style={{ cursor: 'pointer' }}>
+                    <div className="col id-col">
+                      {m.id.slice(0, 4)}
+                    </div>
+
+                    <div className="col name-col">
+                      <div className="mentor-cell">
+                        <span className={`avatar color-${colorIndex}`}>
+                          {getInitials(m.name)}
+                        </span>
+
+                        <span className="name-text">{m.name}</span>
+                      </div>
+                    </div>
+
+                    <div className="col email-col">{m.email}</div>
+
+                    <div className="col actions-col"></div>
                   </div>
-                </div>
-                <div className="col email-col">{m.email}</div>
-                <div className="col actions-col"></div>
-              </div>
-            ))}
+                );
+              })
+            )}
           </div>
         </div>
       ) : (
         <div className="mentor-grid">
-          {filteredMentors.map((m, i) => (
-            <div key={m.id} className="mentor-card">
-              <span className={`avatar large color-${i % 5}`}>
-                {getInitials(m.name)}
-              </span>
+          {filteredMentors.map((m) => {
+            const colorIndex = getColorIndex(m.id);
 
-              <small className="mentor-id">ID: {m.id.slice(0, 8)}</small>
-              <h4 className="mentor-name">{m.name}</h4>
-              <p className="mentor-email">{m.email}</p>
-            </div>
-          ))}
+            return (
+              <div key={m.id} className="mentor-card" onClick={() => navigate(`/college/mentors/${m.id}`)} style={{ cursor: 'pointer' }}>
+                <span className={`avatar large color-${colorIndex}`}>
+                  {getInitials(m.name)}
+                </span>
+
+                <small className="mentor-id">
+                  ID: {m.id.slice(0, 8)}
+                </small>
+
+                <h4 className="mentor-name">{m.name}</h4>
+                <p className="mentor-email">{m.email}</p>
+              </div>
+            );
+          })}
         </div>
-
       )}
 
       {/* ================= ADD MENTOR MODAL ================= */}
@@ -269,6 +277,7 @@ function MentorsPage() {
             <div className="modal-header">
               <div>
                 <h3>Add New Mentor</h3>
+
                 <p className="modal-subtitle">
                   College: <strong>{college?.name}</strong>
                 </p>
@@ -285,26 +294,34 @@ function MentorsPage() {
             <form className="modal-form" onSubmit={handleCreateMentor}>
               <div className="form-group">
                 <label>Full Name</label>
+
                 <input
                   type="text"
                   required
                   placeholder="Enter mentor name"
                   value={formData.name}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setFormData({
+                      ...formData,
+                      name: e.target.value,
+                    })
                   }
                 />
               </div>
 
               <div className="form-group">
                 <label>Email</label>
+
                 <input
                   type="email"
                   required
                   placeholder="Enter mentor email"
                   value={formData.email}
                   onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
+                    setFormData({
+                      ...formData,
+                      email: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -331,7 +348,6 @@ function MentorsPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

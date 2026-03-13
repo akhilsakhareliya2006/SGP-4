@@ -1,61 +1,42 @@
-import { useCallback, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import {  useEffect, useState } from "react";
+import { apiFetch } from "../../utils/api";
 
 function JobsPage() {
-  const { student } = useOutletContext();
-
+  // const { student } = useOutletContext();
+  const [jobs,setJobs] = useState([])
+  const [isLoading,setIsLoading] = useState(true)
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  
+  useEffect(() => {
 
-  const jobs = [
-    {
-      id: 1,
-      title: "Frontend Developer",
-      company: "Tech Solutions Pvt Ltd",
-      location: "Bangalore, India",
-      salary: "₹6–8 LPA",
-      status: "not-applied",
-      type: "current",
-    },
-    {
-      id: 2,
-      title: "Backend Developer",
-      company: "Innovate Labs",
-      location: "Pune, India",
-      salary: "₹5–7 LPA",
-      status: "applied",
-      type: "current",
-    },
-    {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      location: "Remote",
-      salary: "₹7–10 LPA",
-      status: "applied",
-      type: "past",
-    },
-     {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      location: "Remote",
-      salary: "₹7–10 LPA",
-      status: "applied",
-      type: "past",
-    },
-     {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      location: "Remote",
-      salary: "₹7–10 LPA",
-      status: "applied",
-      type: "past",
-    },
-  ];
+    async function fetchJobs(){
+
+      try{
+
+        const data = await apiFetch("/api/student/jobs")
+
+        setJobs(data.data || [])
+
+      }catch(err){
+
+        console.error(err)
+
+      }
+
+      setIsLoading(false)
+
+    }
+
+    fetchJobs()
+
+  },[])
+
+  if(isLoading)
+    return <div className="jobs-page-clean">Loading jobs...</div>
+
+  if(!jobs.length)
+    return <div className="jobs-page-clean">No jobs available</div>
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =

@@ -23,6 +23,7 @@ import CollegeJobsPage from "./pages/college/JobsPage";
 import StudentsPage from "./pages/college/StudentsPage";
 import CollegeCollaborationPage from "./pages/college/CollaborationPage";
 import CollegeAdminSettingsPage from "./pages/college/AdminSettingsPage";
+import MentorsDetailPage from "./pages/college/MentorDetailsPage";
 
 
 /* ---------- Student ---------- */
@@ -97,7 +98,9 @@ function App() {
           <Route path="students" element={<StudentsPage />} />
           <Route path="collaboration" element={<CollegeCollaborationPage />} />
           <Route path="admin-settings" element={<CollegeAdminSettingsPage />} />
+          <Route path="mentors/:id" element={<MentorsDetailPage />} /> {/* NEW ROUTE */}
         </Route>
+
 
 
         {/* ---------- Student Dashboard ---------- */}

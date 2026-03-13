@@ -1614,3 +1614,62 @@
 }
 
 
+
+/* page container */
+.mentors-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  height: 100%;
+}
+
+/* list card */
+.mentors-list-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* take remaining space */
+  min-height: 0; /* critical for flex scrolling */
+}
+
+/* header row */
+.mentors-header-grid {
+  flex-shrink: 0;
+}
+
+/* scroll container */
+.mentors-rows {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.students-card {
+  margin-top: 20px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.students-header {
+  display: grid;
+  grid-template-columns: 1fr 2fr 3fr 1fr;
+  font-weight: 600;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.students-rows {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.student-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 3fr 1fr;
+  padding: 10px 0;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.student-row:hover {
+  background: #fafafa;
+}

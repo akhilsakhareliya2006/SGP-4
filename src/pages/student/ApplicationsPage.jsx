@@ -1,47 +1,45 @@
-import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useEffect, useState } from "react";
+// import { useOutletContext } from "react-router-dom";
+import { apiFetch } from "../../utils/api";
 
 function ApplicationsPage() {
-  const { student } = useOutletContext();
+  // const { student } = useOutletContext();
 
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  // Temporary static data (API later)
-  const applications = [
-    {
-      id: 1,
-      title: "Frontend Developer",
-      company: "Tech Solutions Pvt Ltd",
-      location: "Bangalore, India",
-      salary: "₹6–8 LPA",
-      status: "pending",
-    },
-    {
-      id: 2,
-      title: "Backend Developer",
-      company: "Innovate Labs",
-      location: "Pune, India",
-      salary: "₹5–7 LPA",
-      status: "shortlisted",
-    },
-    {
-      id: 3,
-      title: "Full Stack Engineer",
-      company: "CloudWorks",
-      location: "Remote",
-      salary: "₹7–10 LPA",
-      status: "hired",
-    },
-    {
-      id: 4,
-      title: "UI Engineer",
-      company: "NextGen Systems",
-      location: "Ahmedabad, India",
-      salary: "₹4–6 LPA",
-      status: "rejected",
-    },
-  ];
+  const [applications,setApplications] = useState([])
+  const [isLoading,setIsLoading] = useState(true)
+
+  useEffect(()=>{
+
+    async function fetchApplications(){
+
+      try{
+
+        const data = await apiFetch("/api/student/applications")
+
+        setApplications(data.data || [])
+
+      }catch(err){
+
+        console.error(err)
+
+      }
+
+      setIsLoading(false)
+
+    }
+
+    fetchApplications()
+
+  },[])
+
+  if(isLoading)
+    return <div>Loading applications...</div>
+
+  if(!applications.length)
+    return <div>No applications yet</div>
 
   // SEARCH + FILTER
   const filteredApplications = applications.filter((item) => {

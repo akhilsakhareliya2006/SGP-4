@@ -8,6 +8,7 @@ import logoutIcon from "../../assets/icons/logout.png";
 import gridIcon from "../../assets/icons/grid.png";
 import listIcon from "../../assets/icons/list.png";
 import exportIcon from "../../assets/icons/export.png";
+import { apiFetch } from "../../utils/api";
 
 /* ================= HELPER ================= */
 function getInitials(name) {
@@ -32,16 +33,28 @@ function SideNavBar() {
   const navigate = useNavigate();
 
   /* -------- Fetch Student -------- */
-  useEffect(() => {
-  // TEMP MOCK DATA (for UI testing)
-  setStudent({
-    name: "Test Student",
-    email: "student@test.com",
-    studentId: "STU123",
-  });
-  setIsLoading(false);
-}, []);
+useEffect(() => {
 
+  async function fetchSession() {
+
+    try {
+
+      const res = await apiFetch("/api/auth/me")
+
+      setStudent(res.data)
+
+    } catch (err) {
+
+      console.error(err)
+      navigate("/login")
+
+    }
+
+  }
+
+  fetchSession()
+
+}, [])
   /* -------- Logout -------- */
   const handleLogout = async (e) => {
     e.stopPropagation();

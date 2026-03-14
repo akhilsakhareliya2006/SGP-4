@@ -207,7 +207,11 @@ function MentorsPage() {
 
       {/* ================= LIST VIEW ================= */}
       {viewMode === "list" ? (
-        <div className="card mentors-list-card">
+        <div className="card mentors-list-card" style={{
+    height: "100%",
+    overflowY: "auto",
+    paddingBottom: "60px"
+  }}>
           <div className="mentors-header-grid">
             <div>ID</div>
             <div>Name</div>
@@ -248,7 +252,11 @@ function MentorsPage() {
           </div>
         </div>
       ) : (
-        <div className="mentor-grid">
+        <div className="mentor-grid" style={{
+    height: "100%",
+    overflowY: "auto",
+    paddingBottom: "60px"
+  }}>
           {filteredMentors.map((m) => {
             const colorIndex = getColorIndex(m.id);
 

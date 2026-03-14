@@ -123,7 +123,7 @@ function CollegeDashboardLayout() {
             <img src={collegeLogo} alt="College logo" />
             <div className="sidebar-company-meta">  
               {/* <span className="sidebar-company-name">{college.name}</span> */}
-              <span className="sidebar-company-role">College Panel</span>
+              <span className="sidebar-company-role">{college.name}</span>
             </div>
           </div>
 
@@ -186,7 +186,7 @@ function CollegeDashboardLayout() {
             </span>
 
             <div className="topbar-user-info">
-              <div className="topbar-name">{college.email}</div>
+              <div className="topbar-name">{college.name}</div>
               <div className="topbar-role">Admin</div>
             </div>
 

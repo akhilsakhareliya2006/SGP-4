@@ -195,7 +195,7 @@ function CollegeJobsPage() {
         ))}
       </div>
 
-      <div className="jobs-list">
+      <div className="jobs-list" >
         {filteredJobs.map((job) => (
           <div key={job.id} className="job-card">
             <div className="job-left">

@@ -37,6 +37,8 @@ import StudentMentorApprovedPage from "./pages/student/MentorApprovedPage";
 import StudentProfilePage from "./pages/student/ProfilePage";
 import JobDetailsPage from "./pages/college/JobDetailsPage";
 import CompanyDetailsPage from "./pages/college/CompanyDetailsPage";
+import EmployeeDetailsPage from "./pages/company/EmployeeDetailsPage";
+import CompanyJobDetailsPage from "./pages/company/CompanyJobDetailsPage";
 
 
 /* ---------- Inline Coming Soon ---------- */
@@ -88,6 +90,8 @@ function App() {
           <Route path="applications" element={<ApplicationsPage />} />
           <Route path="collaboration" element={<CollaborationPage />} />
           <Route path="admin-settings" element={<AdminSettingsPage />} />
+          <Route path="employees/:id" element={<EmployeeDetailsPage />} />
+          <Route path="jobs/:id" element={<CompanyJobDetailsPage />} />
         </Route>
 
         {/* ---------- College Dashboard ---------- */}

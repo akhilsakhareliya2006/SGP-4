@@ -32,7 +32,7 @@ function DashboardLayout() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/auth/me`, {
+        const res = await fetch(`${apiUrl}/api/company/profile`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -168,7 +168,7 @@ function DashboardLayout() {
             
             <div className="topbar-user-info">
               {/* Dynamic Email */}
-              <div className="topbar-name">{company.email}</div>
+              <div className="topbar-name">{company.name}</div>
               <div className="topbar-role">Admin</div>
             </div>
             

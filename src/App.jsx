@@ -35,6 +35,8 @@ import StudentApplicationsPage from "./pages/student/ApplicationsPage";
 
 import StudentMentorApprovedPage from "./pages/student/MentorApprovedPage";
 import StudentProfilePage from "./pages/student/ProfilePage";
+import JobDetailsPage from "./pages/college/JobDetailsPage";
+import CompanyDetailsPage from "./pages/college/CompanyDetailsPage";
 
 
 /* ---------- Inline Coming Soon ---------- */
@@ -99,6 +101,8 @@ function App() {
           <Route path="collaboration" element={<CollegeCollaborationPage />} />
           <Route path="admin-settings" element={<CollegeAdminSettingsPage />} />
           <Route path="mentors/:id" element={<MentorsDetailPage />} /> {/* NEW ROUTE */}
+          <Route path="jobs/:id" element={<JobDetailsPage />} />
+          <Route path="company/:id" element={<CompanyDetailsPage />} />
         </Route>
 
 

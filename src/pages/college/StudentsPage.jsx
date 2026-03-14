@@ -236,14 +236,6 @@ const filteredStudents = students
         </div>
       </div>
 
-      <div className="toolbar-row" style={{ marginBottom: "1rem" }}>
-  <input
-    className="search-input"
-    placeholder="Search students by name, email or roll number..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
-</div>
 
 <div className="toolbar-row" style={{ marginBottom: "1rem", gap: "1rem" }}>
   

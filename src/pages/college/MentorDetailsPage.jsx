@@ -22,7 +22,7 @@ function MentorDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const [filter, setFilter] = useState(""); 
+  const [filter, setFilter] = useState("jobs_current"); 
 
   /* ---------- FETCH MENTOR DETAILS ---------- */
   const fetchMentorDetails = useCallback(async () => {
@@ -239,7 +239,7 @@ function MentorDetailsPage() {
                     <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
                       {filter === 'jobs_past' ? 'Archived' : 'Active Assignment'}
                     </span>
-                    <span style={{ color: '#4f46e5', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span onClick={() => navigate(`/college/jobs/${job.id}`)} style={{ color: '#4f46e5', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                       View <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>→</span>
                     </span>
                   </div>

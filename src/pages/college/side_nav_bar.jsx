@@ -28,60 +28,44 @@ function CollegeDashboardLayout() {
   const apiUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
 
-  //frontend only
-  
-  // useEffect(()=>{
-  //   const fetchCollege=async()=>{
-  //     setCollege({
-  //         name:"Charusat",
-  //         email:"charusat@admin.com"
-  //     })
-  //     setIsLoading(false)
-  //   }
-  //   fetchCollege()
-  // },[])
 
-  
-  //with backend
 
-  /* ---------- Fetch Logged-in College ---------- */
   useEffect(() => {
     const fetchCollege = async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/auth/me`, {
+        const res = await fetch(`${apiUrl}/api/college/profile`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", 
         });
 
         if (!res.ok) {
-          navigate("/login");
-          return;
+          throw new Error("Failed to fetch college profile");
         }
 
         const data = await res.json();
-        setCollege(data.data);
+        const profile = data.data || data; // Assuming your ApiResponse wrapper puts it in data.data
+
+        // Set the dynamic data
+        setCollege({
+          name: profile.name || "Unknown College",
+          email: profile.email || "No Email",
+          phone: profile.phone || "",
+          address: profile.address || "",
+        });
+
       } catch (error) {
-        console.error("College auth error:", error);
-        navigate("/login");
+        console.error("Error fetching college profile:", error.message);
+        // Fallback or error handling can go here
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCollege();
-  }, [navigate,apiUrl]);
-
-  useEffect(()=>{
-    const fetchCollege=async()=>{
-      setCollege({
-          name:"Charusat",
-          email:"charusat@admin.com"
-      })
-      setIsLoading(false)
-    }
-    fetchCollege()
-  },[])
+  }, [apiUrl]);
   
   /* ---------- Logout ---------- */
   const handleLogout = async (e) => {

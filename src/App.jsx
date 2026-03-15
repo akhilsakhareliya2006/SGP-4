@@ -13,7 +13,6 @@ import JobsPage from "./pages/company/JobsPage";
 import ApplicationsPage from "./pages/company/ApplicationsPage";
 import CollaborationPage from "./pages/company/CollaborationPage";
 import AdminSettingsPage from "./pages/company/AdminSettingsPage";
-import DashboardPage from "./pages/company/DashboardPage";
 
 /* ---------- College ---------- */
 import CollegeDashboardLayout from "./pages/college/side_nav_bar";
@@ -39,6 +38,10 @@ import JobDetailsPage from "./pages/college/JobDetailsPage";
 import CompanyDetailsPage from "./pages/college/CompanyDetailsPage";
 import EmployeeDetailsPage from "./pages/company/EmployeeDetailsPage";
 import CompanyJobDetailsPage from "./pages/company/CompanyJobDetailsPage";
+import JobPipelinePage from "./pages/company/JobPipelinePage";
+import CompanyCollegeDetailsPage from "./pages/company/CompanyCollegeDetailsPage";
+import CompanyDashboard from "./pages/company/CompanyDashboard";
+import CompanySettingsPage from "./pages/company/AdminSettingsPage";
 
 
 /* ---------- Inline Coming Soon ---------- */
@@ -84,7 +87,7 @@ function App() {
         {/* ---------- Company Dashboard ---------- */}
         <Route path="/company" element={<CompanyDashboardLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="dashboard" element={<CompanyDashboard />} />
           <Route path="employees" element={<EmployeesPage />} />
           <Route path="jobs" element={<JobsPage />} />
           <Route path="applications" element={<ApplicationsPage />} />
@@ -92,6 +95,9 @@ function App() {
           <Route path="admin-settings" element={<AdminSettingsPage />} />
           <Route path="employees/:id" element={<EmployeeDetailsPage />} />
           <Route path="jobs/:id" element={<CompanyJobDetailsPage />} />
+          <Route path="applications/:jobId" element={<JobPipelinePage />} />
+          <Route path="college/:id" element={<CompanyCollegeDetailsPage />} />
+          <Route path="settings" element={<CompanySettingsPage/>} />
         </Route>
 
         {/* ---------- College Dashboard ---------- */}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 /* ---------- Helpers ---------- */
 function getInitials(name) {
@@ -196,6 +197,8 @@ function ColloborationPage() {
     );
   };
 
+  const navigate=useNavigate()
+
   return (
     <div className="employees-page" style={{
     height: "100%",
@@ -261,11 +264,13 @@ function ColloborationPage() {
                 <div 
                   key={college.id} 
                   className="job-card-soft" 
+                  onClick={() => navigate(`/company/college/${college.id}`)}
                   style={{ 
                     padding: '1.5rem', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', 
                     borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    cursor:"pointer"
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-4px)';
@@ -303,9 +308,12 @@ function ColloborationPage() {
                   </div>
 
                   {/* Bottom Action / Status Section */}
-                  <div style={{ paddingTop: '1rem', borderTop: '1px solid #f1f5f9', marginTop: 'auto' }}>
-                    {renderStatus(college.status, college.id)}
-                  </div>
+                  <div 
+                  style={{ paddingTop: '1rem', borderTop: '1px solid #f1f5f9', marginTop: 'auto' }}
+                  onClick={(e) => e.stopPropagation()} // 👈 VERY IMPORTANT: Prevents navigation when clicking buttons inside the card
+                >
+                  {renderStatus(college.status, college.id)}
+                </div>
                 </div>
               );
             })}

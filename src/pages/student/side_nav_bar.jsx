@@ -10,6 +10,8 @@ import listIcon from "../../assets/icons/list.png";
 import exportIcon from "../../assets/icons/export.png";
 import { apiFetch } from "../../utils/api";
 
+import CompleteProfilePage from "./CompleteProfilePage";
+
 /* ================= HELPER ================= */
 function getInitials(name) {
   if (!name) return "ST";
@@ -27,34 +29,38 @@ function SideNavBar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const [student, setStudent] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // 🚨 1. This MUST start as true so the app waits for the API
+  const [isLoading, setIsLoading] = useState(true); 
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const navigate = useNavigate();
 
   /* -------- Fetch Student -------- */
-useEffect(() => {
+  useEffect(() => {
+    async function fetchSession() {
+      try {
+        const res = await apiFetch("/api/auth/me");
+        
+        // Ensure we are grabbing the actual user object securely
+        let userData = res.data;
+        if (userData && userData.data) {
+          userData = userData.data;
+        }
 
-  async function fetchSession() {
-
-    try {
-
-      const res = await apiFetch("/api/auth/me")
-
-      setStudent(res.data)
-
-    } catch (err) {
-
-      console.error(err)
-      navigate("/login")
-
+        console.log("👉 DEBUG - Fetched Student:", userData); // Check your browser console!
+        
+        setStudent(userData);
+      } catch (err) {
+        console.error(err);
+        navigate("/login");
+      } finally {
+        // ALWAYS turn off loading, even if it fails
+        setIsLoading(false);
+      }
     }
+    fetchSession();
+  }, [navigate]);
 
-  }
-
-  fetchSession()
-
-}, [])
   /* -------- Logout -------- */
   const handleLogout = async (e) => {
     e.stopPropagation();
@@ -75,13 +81,30 @@ useEffect(() => {
   const navClass = ({ isActive }) =>
     isActive ? "nav-item nav-item-active" : "nav-item";
 
-  /* -------- Loading Guard -------- */
+  /* ================= RENDER GUARDS (ORDER IS CRITICAL) ================= */
+
+  // GUARD 1: Still waiting for API? Show Loading.
   if (isLoading) {
-    return <div className="dashboard-loading">Loading Student Panel...</div>;
+    return <div className="dashboard-loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading Student Panel...</div>;
   }
 
-  if (!student) return null;
+  // GUARD 2: Did the API fail and student is STILL null? Stop the crash!
+  if (!student) {
+    return null; 
+  }
 
+  // GUARD 3: Because we passed the null check above, it is now 100% safe to check the profile.
+  if (student.hasCompletedProfile === false) {
+    return (
+      <CompleteProfilePage 
+        onComplete={() => {
+          window.location.reload(); 
+        }} 
+      />
+    );
+  }
+
+  /* ================= STANDARD MAIN LAYOUT ================= */
   return (
     <div
       className={`dashboard-root ${
@@ -96,9 +119,6 @@ useEffect(() => {
             <div className="sidebar-company-meta">
               <span className="sidebar-company-name">
                 {student.name}
-              </span>
-              <span className="sidebar-company-role">
-                Student Panel
               </span>
             </div>
           </div>
@@ -169,9 +189,9 @@ useEffect(() => {
             </span>
 
             <div className="topbar-user-info">
-              <div className="topbar-name">{student.email}</div>
+              <div className="topbar-name">{student.name}</div>
               <div className="topbar-role">
-                ID: {student.studentId || "—"}
+                ID: {student.metadata?.rollNo || "—"}
               </div>
             </div>
 

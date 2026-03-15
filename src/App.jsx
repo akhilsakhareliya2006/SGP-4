@@ -28,12 +28,12 @@ import MentorsDetailPage from "./pages/college/MentorDetailsPage";
 /* ---------- Student ---------- */
 import StudentDashboardLayout from "./pages/student/side_nav_bar";
 import StudentDashboard from "./pages/student/DashboardPage";
-import StudentApplyPage from "./pages/student/ApplyPage";
 import StudentJobsPage from "./pages/student/JobsPage";
 import StudentApplicationsPage from "./pages/student/ApplicationsPage";
-
 import StudentMentorApprovedPage from "./pages/student/MentorApprovedPage";
-import StudentProfilePage from "./pages/student/ProfilePage";
+import ApplyPage from "./pages/student/ApplyPage";
+import StudentJobDetailsPage from "./pages/student/JobDetailPage";
+
 import JobDetailsPage from "./pages/college/JobDetailsPage";
 import CompanyDetailsPage from "./pages/college/CompanyDetailsPage";
 import EmployeeDetailsPage from "./pages/company/EmployeeDetailsPage";
@@ -42,8 +42,14 @@ import JobPipelinePage from "./pages/company/JobPipelinePage";
 import CompanyCollegeDetailsPage from "./pages/company/CompanyCollegeDetailsPage";
 import CompanyDashboard from "./pages/company/CompanyDashboard";
 import CompanySettingsPage from "./pages/company/AdminSettingsPage";
+import ProfilePage from "./pages/student/CompleteProfilePage";
 
-
+ import MentorDashboardLayout from "./pages/mentor/side_nav_bar";
+import MentorDashboard from "./pages/mentor/MentorDashboard";
+import MentorJobsPage from "./pages/mentor/Jobs";
+import MentorApprovalsPage from "./pages/mentor/MentorApproval";
+import MentorSettingsPage from "./pages/mentor/Profile";
+import MentorStudentsPage from "./pages/mentor/Students";
 /* ---------- Inline Coming Soon ---------- */
 function ComingSoon({ title }) {
   return (
@@ -121,17 +127,28 @@ function App() {
 
         <Route path="/student" element={<StudentDashboardLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
-
           <Route path="dashboard" element={<StudentDashboard />} />
-          <Route path="apply" element={<StudentApplyPage />} />
+          <Route path="apply" element={<ApplyPage />} />
           <Route path="jobs" element={<StudentJobsPage />} />
-          <Route path="applications" element={<StudentApplicationsPage />} />  {/* ✅ */}
+          <Route path="applications" element={<StudentApplicationsPage />} />
           <Route path="mentor-approved" element={<StudentMentorApprovedPage />} />
-          <Route path="profile" element={<StudentProfilePage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          
+          {/* 👇 THIS NOW POINTS TO THE STUDENT'S DETAIL PAGE */}
+          <Route path="job/:jobId" element={<StudentJobDetailsPage />} />
         </Route>
 
 
-
+     
+        {/* ------------------mentor dashboard-------- */}
+        <Route path="/mentor" element={<MentorDashboardLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<MentorDashboard />} />
+          <Route path="approvals" element={<MentorApprovalsPage />} />
+          <Route path="students" element={<MentorStudentsPage />} />
+          <Route path="jobs" element={<MentorJobsPage />} />
+          <Route path="profile" element={<MentorSettingsPage />} /> 
+        </Route>
 
         {/* ---------- Fallback ---------- */}
         <Route path="*" element={<Navigate to="/login" replace />} />

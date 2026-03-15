@@ -1,327 +1,116 @@
-import { useState, useEffect, useRef } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
-import { FiMapPin, FiDollarSign, FiCalendar } from "react-icons/fi";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { FiMapPin, FiDollarSign, FiCalendar, FiClock, FiBriefcase } from "react-icons/fi";
+import { apiFetch } from "../../utils/api";
+
+const formatCurrency = (amount) => amount ? `₹${Number(amount).toLocaleString("en-IN")}` : "Not Disclosed";
+const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "N/A";
+const getInitials = (title) => title ? title.split(" ").filter(Boolean).slice(0, 2).map(n => n[0]?.toUpperCase()).join("") : "JB";
 
 function ApplyPage() {
-  const { student } = useOutletContext();
-
-  const [search, setSearch] = useState("");
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [showDetail, setShowDetail] = useState(false);
-  const [applyLoading, setApplyLoading] = useState(false);
-
-  const token =
-    student?.token ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("authToken") ||
-    localStorage.getItem("accessToken");
-
   const navigate = useNavigate();
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  const idempotencyKeyRef = useRef(null);
-
-  /* ================= FETCH JOBS (NO IDEMPOTENCY) ================= */
   useEffect(() => {
     const fetchJobs = async () => {
-      setLoading(true);
-      setError(null);
-
       try {
-        const headers = {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        };
-
-        const res = await axios.get(
-          `${apiUrl}/api/student/jobs`,
-          { headers, withCredentials: true }
-        );
-
-        const payload = res.data?.data ?? res.data;
-        setJobs(Array.isArray(payload?.jobs) ? payload.jobs : []);
+        const res = await apiFetch(`/api/student/jobs?filter=not_applied&limit=50`);
+        const fetchedJobs = res.data?.jobs || res.data || [];
+        console.log(res.data);
+        
+        setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
       } catch (err) {
-        console.log(err);
-        if (err?.response?.status === 401) {
-          setError("Unauthorized — please login");
-          navigate("/auth/login");
-          return;
-        }
-        setJobs([]);
+        console.error("Failed to fetch jobs:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchJobs();
   }, []);
 
-  /* ================= JOB DETAILS ================= */
-  const handleApply = async (jobId) => {
-    setDetailLoading(true);
-    setSelectedJob(null);
-    setShowDetail(true);
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) =>
+      job.title?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [jobs, search]);
 
-    try {
-      const endpoints = [`${apiUrl}/api/student/job/${jobId}`];
-      let data = null;
-
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      };
-
-      for (const ep of endpoints) {
-        try {
-          const resp = await axios.get(ep, {
-            headers,
-            withCredentials: true,
-          });
-          if (resp.status >= 200 && resp.status < 300) {
-            data = resp.data?.data ?? resp.data;
-            break;
-          }
-        } catch (e) {
-          if (e?.response?.status === 401) {
-            setError("Unauthorized — please login");
-            navigate("/auth/login");
-            return;
-          }
-        }
-      }
-
-      if (!data) {
-        const found = jobs.find((j) => String(j.id) === String(jobId));
-        setSelectedJob(found || { id: jobId, title: "Unknown Job" });
-      } else {
-        setSelectedJob(data);
-      }
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  /* ================= APPLY TO JOB (IDEMPOTENT) ================= */
-  const applyToJob = async (jobId) => {
-    if (!jobId) {
-      alert("Unable to determine job id to apply");
-      return;
-    }
-
-    setApplyLoading(true);
-
-    // ✅ generate ONCE per apply attempt
-    if (!idempotencyKeyRef.current) {
-      idempotencyKeyRef.current = uuidv4();
-    }
-
-    try {
-      const headers = {
-        "Content-Type": "application/json",
-        "Idempotency-Key": idempotencyKeyRef.current,
-        ...(token && { Authorization: `Bearer ${token}` }),
-      };
-
-      const res = await axios.post(
-        `${apiUrl}/api/student/apply/${jobId}`,
-        {},
-        { headers, withCredentials: true }
-      );
-      console.log(res);
-
-
-      if (res.status >= 200 && res.status < 300) {
-        const payload = res.data?.data ?? res.data;
-        alert(payload?.message || res.data?.message || "Applied successfully");
-        setShowDetail(false);
-
-        // ✅ reset key after success
-        idempotencyKeyRef.current = null;
-      } else {
-        alert("Apply failed");
-      }
-    } catch (err) {
-      console.error(err);
-      if (err?.response?.status === 401) {
-        setError("Unauthorized — please login");
-        navigate("/auth/login");
-        return;
-      }
-      alert(err?.response?.data?.message || "Apply failed");
-    } finally {
-      setApplyLoading(false);
-    }
-  };
-
-  /* ================= SEARCH ================= */
-  const filteredJobs = jobs.filter(
-    (job) =>
-      job.title?.toLowerCase().includes(search.toLowerCase()) ||
-      job.company?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const renderField = (val) => {
-    if (val === null || val === undefined) return "";
-    if (typeof val === "string" || typeof val === "number") return val;
-    if (typeof val === "object")
-      return val.name ?? val.title ?? val.companyName ?? JSON.stringify(val);
-    return String(val);
-  };
-
-  /* ================= UI (UNCHANGED) ================= */
   return (
-    <div className="apply-page">
-      <h2 className="page-title">Apply for Jobs</h2>
+    <div style={{ height: 'calc(100vh - 40px)', width: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="employees-page" style={{ flexGrow: 1, overflowY: 'auto', padding: '0 2rem 5rem 2rem' }}>
+        
+        <div className="employees-header" style={{ marginBottom: '1.5rem', flexShrink: 0 }}>
+          <h2 className="page-title">Discover Opportunities</h2>
+          <p className="page-subtitle">Explore active jobs curated specifically for your college.</p>
+        </div>
 
-      <input
-        className="jobs-search-input"
-        placeholder="Search jobs..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+        <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <input
+            className="search-input"
+            placeholder="Search by job title..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ minWidth: '320px', margin: 0 }}
+          />
+        </div>
 
-      <div className="job-list">
         {loading ? (
-          <p style={{ color: "#64748b" }}>Loading jobs...</p>
+          <div className="dashboard-loading" style={{ padding: '4rem 0' }}>Fetching active jobs...</div>
         ) : filteredJobs.length === 0 ? (
-          <p style={{ color: "#64748b" }}>No jobs found.</p>
+          <div className="empty-state" style={{ padding: '4rem', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+            <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>📭</span>
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#0f172a' }}>No new jobs available</h3>
+            <p style={{ margin: 0, color: '#64748b' }}>You have applied to all active postings, or none match your search.</p>
+          </div>
         ) : (
-          filteredJobs.map((job) => {
-            const formattedSalary = job.salary
-              ? `₹${Number(job.salary).toLocaleString("en-IN")}`
-              : "N/A";
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {filteredJobs.map((job) => {
+              const isClosingSoon = new Date(job.dueDate) < new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); 
 
-            const formattedDate = job.dueDate
-              ? new Date(job.dueDate).toLocaleDateString("en-GB")
-              : "N/A";
-
-            return (
-              <div key={job.id} className="job-card-gradient">
-                <div className="job-left">
-                  <div className="job-title">{renderField(job.title)}</div>
-                  <div className="job-company">{renderField(job.company)}</div>
-
-                  <div className="job-info">
-                    <div className="info-row">
-                      <span className="info-label">Location :</span>
-                      <span className="info-value">
-                        {renderField(job.location)}
-                      </span>
+              return (
+                <div 
+                  key={job.id} 
+                  className="card" 
+                  onClick={() => navigate(`/student/job/${job.id}`)}
+                  style={{ 
+                    padding: '1.5rem', display: 'flex', flexDirection: 'column', cursor: 'pointer',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                      {getInitials(job.title)}
                     </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Salary :</span>
-                      <span className="info-value">
-                        {formattedSalary}
+                    {isClosingSoon && (
+                      <span style={{ backgroundColor: '#fef2f2', color: '#ef4444', padding: '4px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <FiClock /> Closing Soon
                       </span>
+                    )}
+                  </div>
+
+                  <h4 style={{ margin: '0 0 0.5rem 0', color: '#0f172a', fontSize: '1.15rem', lineHeight: '1.3' }}>{job.title}</h4>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem', flexGrow: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.85rem' }}>
+                      <FiDollarSign className="text-gray-400" /><strong style={{ color: '#334155' }}>{formatCurrency(job.salary)}</strong>
                     </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Last Date :</span>
-                      <span className="info-value">
-                        {formattedDate}
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '0.85rem' }}>
+                      <FiCalendar className="text-gray-400" />Deadline: {formatDate(job.dueDate)}
                     </div>
                   </div>
-                </div>
 
-                <div className="job-right">
-                  <button
-                    type="button"
-                    className="apply-btn-gradient"
-                    onClick={() => handleApply(job.id)}
-                  >
-                    Apply
-                  </button>
+                  <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', color: '#4f46e5', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Review & Apply →
+                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
-
-      {showDetail && (
-        <div
-          className="job-detail-modal"
-          style={{
-            position: "fixed",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,0.4)",
-          }}
-        >
-          <div
-            style={{
-              width: 720,
-              maxWidth: "95%",
-              background: "#fff",
-              borderRadius: 8,
-              padding: 20,
-            }}
-          >
-            <button
-              style={{ float: "right" }}
-              onClick={() => {
-                setShowDetail(false);
-                setSelectedJob(null);
-              }}
-            >
-              Close
-            </button>
-
-            {detailLoading ? (
-              <p>Loading details...</p>
-            ) : selectedJob ? (
-              <div>
-                <h3 style={{ marginTop: 0 }}>
-                  {renderField(selectedJob.title)}
-                </h3>
-                <p style={{ color: "#64748b" }}>
-                  {renderField(selectedJob.company)}
-                </p>
-                <p>
-                  <strong>Location:</strong>{" "}
-                  {renderField(selectedJob.location)}
-                </p>
-                <p>
-                  <strong>Salary:</strong>{" "}
-                  {renderField(selectedJob.salary)}
-                </p>
-                <p>
-                  <strong>Last Date:</strong>{" "}
-                  {renderField(selectedJob.dueDate)}
-                </p>
-
-                <div style={{ marginTop: 16 }}>
-                  <button
-                    className="confirm-apply-btn"
-                    onClick={() =>
-                      applyToJob(
-                        selectedJob?.id ||
-                        selectedJob?._id ||
-                        selectedJob?.jobId
-                      )
-                    }
-                    disabled={applyLoading}
-                  >
-                    {applyLoading ? "Applying..." : "Confirm Apply"}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p>No job details available.</p>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

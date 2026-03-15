@@ -1,12 +1,11 @@
-
-
 import React, { useState } from "react";
 import TextInput from "../../components/TextInput";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
-  const apiUrl = import.meta.env.VITE_API_URL;
+  // Safe fallback in case the .env variable is missing
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   const [form, setForm] = useState({
     email: "",
@@ -14,12 +13,12 @@ const Login = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState(""); // ✅ NEW
+  const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
-    setServerError(""); // ✅ clear backend error while typing
+    setServerError(""); 
 
     setForm((prev) => ({
       ...prev,
@@ -46,49 +45,54 @@ const Login = () => {
       setLoading(true);
       setServerError("");
 
+      console.log(`👉 Sending login request to: ${apiUrl}/api/auth/login`);
+
       const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // remove if not using cookies
+        credentials: "include", 
         body: JSON.stringify(form),
       });
 
       const data = await res.json();
+      console.log("👉 Login Response:", data); // Check your F12 Console!
 
       if (!res.ok) {
         setServerError(data.message || "Incorrect email or password");
         return;
       }
 
-      // ✅ Store token
-      const token =
-        data?.token ||
-        data?.data?.token ||
-        data?.data?.accessToken ||
-        data?.accessToken;
-
+      // Store token
+      const token = data?.token || data?.data?.token || data?.data?.accessToken || data?.accessToken;
       if (token) {
         localStorage.setItem("token", token);
       }
 
-      // ✅ Store user
-      if (data?.data) {
-        localStorage.setItem("user", JSON.stringify(data.data));
+      // Deeply extract the user object (Handles different backend response structures)
+      const userObj = data?.data?.user || data?.data || data?.user;
+      
+      if (userObj) {
+        localStorage.setItem("user", JSON.stringify(userObj));
       }
 
-      // ✅ Role based navigation
-      const role = data?.data?.role;
+      // Role based navigation
+      const role = userObj?.role;
+      console.log("👉 Detected Role:", role);
 
       if (role === "student") navigate("/student");
       else if (role === "companyAdmin") navigate("/company");
       else if (role === "collegeAdmin") navigate("/college");
-      else navigate("/");
+      else if (role === "mentor") navigate("/mentor");
+      else {
+        setServerError(`Unknown user role: ${role || 'undefined'}`);
+        console.error("Failed to route because role is unknown:", role);
+      }
 
     } catch (error) {
       console.error("Login error:", error);
-      setServerError("Something went wrong. Please try again.");
+      setServerError("Something went wrong. Please check if your backend is running.");
     } finally {
       setLoading(false);
     }
@@ -99,10 +103,10 @@ const Login = () => {
       <div className="auth-center">
         <div className="auth-card">
           <div className="auth-logo">
-            <img src="/src/assets/images/logo.png" alt="CampusHire Logo" />
+            {/* Make sure the logo path is correct, or just use text if it's breaking */}
+            <h2>CampusHire</h2>
           </div>
 
-          <h2>Welcome to CampusHire</h2>
           <p className="auth-subtitle">
             Sign in to your account to continue
           </p>
@@ -132,23 +136,24 @@ const Login = () => {
               togglePassword={() => setShowPassword(!showPassword)}
             />
 
-            {/* ✅ SERVER ERROR MESSAGE */}
             {serverError && (
-              <div className="auth-error">
+              <div className="auth-error" style={{ color: 'red', marginTop: '10px', fontSize: '14px', textAlign: 'center' }}>
                 {serverError}
               </div>
             )}
 
-            <div className="auth-forgot">Forgot password?</div>
+            <div className="auth-forgot" style={{ textAlign: 'right', margin: '10px 0', fontSize: '14px', cursor: 'pointer', color: '#4f46e5' }}>
+              Forgot password?
+            </div>
 
-            <button className="auth-btn" type="submit" disabled={loading}>
+            <button className="auth-btn" type="submit" disabled={loading} style={{ width: '100%', padding: '10px', backgroundColor: '#4f46e5', color: '#fff', border: 'none', borderRadius: '5px', cursor: loading ? 'not-allowed' : 'pointer' }}>
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
-          <p className="auth-footer">
-            Don’t have an account?{" "}
-            <Link to="/register" className="auth-register-link">
+          <p className="auth-footer" style={{ textAlign: 'center', marginTop: '20px' }}>
+            Don't have an account?{" "}
+            <Link to="/register" className="auth-register-link" style={{ color: '#4f46e5', textDecoration: 'none' }}>
               Register
             </Link>
           </p>

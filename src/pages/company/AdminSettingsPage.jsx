@@ -77,7 +77,7 @@ function CompanySettingsPage() {
       } else {
         showMessage("error", data.message || "Failed to update profile.");
       }
-    } catch (err) {
+    } catch (error) {
       showMessage("error", "An unexpected error occurred.");
     } finally {
       setLoadingState("");

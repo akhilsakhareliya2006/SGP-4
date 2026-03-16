@@ -103,10 +103,9 @@ const Login = () => {
       <div className="auth-center">
         <div className="auth-card">
           <div className="auth-logo">
-            {/* Make sure the logo path is correct, or just use text if it's breaking */}
-            <h2>CampusHire</h2>
+            <img src="/src/assets/images/logo.png" alt="CampusHire Logo" />
           </div>
-
+          <h2>Welcome to CampusHire</h2>
           <p className="auth-subtitle">
             Sign in to your account to continue
           </p>

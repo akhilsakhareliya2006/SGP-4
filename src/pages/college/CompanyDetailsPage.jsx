@@ -22,14 +22,14 @@ function CompanyDetailsPage() {
   const [error, setError] = useState(null);
 
   /* ---------- FETCH COMPANY DETAILS ---------- */
-  const fetchCompanyDetails = useCallback(async () => {
+  const fetchCompanyDetails = useCallback(async (signal) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Adjust this endpoint if your route structure is different
       const res = await fetch(`${apiUrl}/api/college/company/${id}`, {
         credentials: "include",
+        signal, // 👈 Kills the request if the admin hits "Back" too fast
       });
 
       const data = await res.json();
@@ -40,15 +40,27 @@ function CompanyDetailsPage() {
 
       setCompany(data.data);
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log("Company fetch aborted due to navigation");
+        return; // 👈 Silently exit
+      }
       console.error("Company details fetch error:", err);
       setError(err.message);
     } finally {
-      setIsLoading(false);
+      // Only disable loading if we didn't cancel the request
+      if (!signal || !signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [apiUrl, id]);
 
   useEffect(() => {
-    fetchCompanyDetails();
+    const controller = new AbortController();
+    
+    fetchCompanyDetails(controller.signal);
+
+    // Cleanup: Cancel the request instantly on unmount
+    return () => controller.abort();
   }, [fetchCompanyDetails]);
 
   if (isLoading && !company) {

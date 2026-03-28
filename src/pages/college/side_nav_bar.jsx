@@ -31,6 +31,9 @@ function CollegeDashboardLayout() {
 
 
   useEffect(() => {
+    // 1. Create the abort controller
+    const controller = new AbortController();
+
     const fetchCollege = async () => {
       try {
         const res = await fetch(`${apiUrl}/api/college/profile`, {
@@ -39,6 +42,7 @@ function CollegeDashboardLayout() {
             "Content-Type": "application/json",
           },
           credentials: "include", 
+          signal: controller.signal // 👈 Attach the abort signal
         });
 
         if (!res.ok) {
@@ -46,9 +50,8 @@ function CollegeDashboardLayout() {
         }
 
         const data = await res.json();
-        const profile = data.data || data; // Assuming your ApiResponse wrapper puts it in data.data
+        const profile = data.data || data;
 
-        // Set the dynamic data
         setCollege({
           name: profile.name || "Unknown College",
           email: profile.email || "No Email",
@@ -57,14 +60,24 @@ function CollegeDashboardLayout() {
         });
 
       } catch (error) {
+        // 2. Silently ignore the error if WE cancelled the request
+        if (error.name === 'AbortError') {
+          console.log("College profile fetch aborted");
+          return; 
+        }
         console.error("Error fetching college profile:", error.message);
-        // Fallback or error handling can go here
       } finally {
-        setIsLoading(false);
+        // 3. Only remove the loading screen if the component is still alive
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchCollege();
+
+    // 4. Cleanup: Cancel the fetch if the layout unmounts (e.g., user logs out fast)
+    return () => controller.abort();
   }, [apiUrl]);
   
   /* ---------- Logout ---------- */

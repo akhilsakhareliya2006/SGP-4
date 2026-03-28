@@ -70,8 +70,7 @@ function CollegeCollaborationPage() {
   const [error, setError] = useState(null);
 
   /* ---------- Fetch Collaborations ---------- */
-  // Wrapped in useCallback and moved above useEffect to fix hoisting issues
-  const fetchCompanies = useCallback(async (backendStatus = "pending") => {
+  const fetchCompanies = useCallback(async (backendStatus = "pending", signal = null) => {
     try {
       setLoading(true);
       setError(null);
@@ -86,6 +85,7 @@ function CollegeCollaborationPage() {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
+          signal, // 👈 Instantly kills the fetch if the user clicks a different tab
         }
       );
 
@@ -100,15 +100,28 @@ function CollegeCollaborationPage() {
 
       setCompanies(normalized);
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log("Collaboration fetch aborted due to tab switch or navigation");
+        return; // 👈 Silently exit to prevent overwriting the wrong tab's state
+      }
       setError(err.message);
       setCompanies([]);
     } finally {
-      setLoading(false);
+      // Only remove the loading spinner if we didn't cancel the request
+      if (!signal || !signal.aborted) {
+        setLoading(false);
+      }
     }
   }, [apiUrl]);
 
   useEffect(() => {
-    fetchCompanies(REVERSE_STATUS_MAP[filter]);
+    const controller = new AbortController();
+    
+    // Pass the signal down into the fetch function
+    fetchCompanies(REVERSE_STATUS_MAP[filter], controller.signal);
+
+    // Cleanup: Fire the abort signal if the filter changes or the component unmounts
+    return () => controller.abort();
   }, [filter, fetchCompanies]);
 
   /* ---------- Accept / Reject ---------- */

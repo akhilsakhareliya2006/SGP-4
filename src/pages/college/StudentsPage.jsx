@@ -30,11 +30,13 @@ const [statusFilter, setStatusFilter] = useState("");
 const branches = [...new Set(students.map((s) => s.branch).filter(Boolean))];
 
   /* ---------- FETCH STUDENTS ---------- */
-  const fetchStudents = useCallback(async () => {
+  // Wrapped in useCallback to prevent infinite loops and satisfy ESLint
+  const fetchStudents = useCallback(async (signal = null) => {
     setIsLoading(true);
     try {
       const res = await fetch(`${apiUrl}/api/student`, {
         credentials: "include",
+        signal, // 👈 Attach the abort signal if provided
       });
 
       const data = await res.json();
@@ -45,16 +47,27 @@ const branches = [...new Set(students.map((s) => s.branch).filter(Boolean))];
 
       setStudents(data?.data || []);
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log("Students fetch aborted cleanly on navigation.");
+        return; 
+      }
       console.error("Students fetch error:", err);
       setStudents([]);
     } finally {
-      setIsLoading(false);
+      if (!signal || !signal.aborted) {
+        setIsLoading(false);
+      }
     }
-  }, [apiUrl]);
+  }, [apiUrl]); // 👈 Only depends on apiUrl
 
+  /* ---------- MOUNT PROTECTION ---------- */
   useEffect(() => {
-    fetchStudents();
-  }, [fetchStudents]);
+    const controller = new AbortController();
+    
+    fetchStudents(controller.signal);
+
+    return () => controller.abort();
+  }, [fetchStudents]); // 👈 ESLint is happy, and the AbortController still works!
 
   /* ---------- FILE CHANGE & DRAG/DROP ---------- */
   const handleFileChange = (e) => {

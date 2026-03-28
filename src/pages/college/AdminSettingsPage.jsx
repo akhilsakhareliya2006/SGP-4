@@ -38,6 +38,7 @@ function CollegeAdminSettings() {
   // --- Reset User Password State ---
   const [resetUserForm, setResetUserForm] = useState({
     email: "",
+    role:"student"
   });
   const [isResettingUser, setIsResettingUser] = useState(false);
   const [resetUserMessage, setResetUserMessage] = useState({ type: "", text: "" });

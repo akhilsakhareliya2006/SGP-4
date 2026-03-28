@@ -26,21 +26,32 @@ function CollegeDashboard() {
   const [pendingCollabs, setPendingCollabs] = useState([]);
 
   /* ---------- FETCH DASHBOARD DATA ---------- */
+  /* ---------- FETCH DASHBOARD DATA ---------- */
   useEffect(() => {
-    // Note: Ideally, you should create a dedicated backend route like `/api/college/dashboard` 
-    // to fetch all this in one go. For now, we will simulate the data fetching or you can 
-    // wire it to your existing endpoints using Promise.all().
-    
+    // 1. Create a single controller for all 4 requests
+    const controller = new AbortController();
+    const options = { credentials: "include", signal: controller.signal };
+
+    // 2. Helper to catch normal network errors but propagate AbortErrors
+    const safeFetch = (url) => 
+      fetch(url, options).catch(err => {
+        if (err.name === 'AbortError') throw err; // Send aborts straight to the main catch block
+        return null; // For normal errors, return null so Promise.all doesn't crash completely
+      });
+
     const fetchDashboardStats = async () => {
       setIsLoading(true);
       try {
-        // Example: Fetching from multiple endpoints at once
-        const [dashboardRes,jobsRes, collabsRes, mentorsRes] = await Promise.all([
-          fetch(`${apiUrl}/api/college/dashboard`, { credentials: "include" }).catch(() => null),
-          fetch(`${apiUrl}/api/college/job/requests?filter=PENDING`, { credentials: "include" }).catch(() => null),
-          fetch(`${apiUrl}/api/college/collab/request?status=pending`, { credentials: "include" }).catch(() => null),
-          fetch(`${apiUrl}/api/college/mentors`, { credentials: "include" }).catch(() => null)
+        // 3. Fire all 4 requests with the abort signal attached
+        const [dashboardRes, jobsRes, collabsRes, mentorsRes] = await Promise.all([
+          safeFetch(`${apiUrl}/api/college/dashboard`),
+          safeFetch(`${apiUrl}/api/college/job/requests?filter=PENDING`),
+          safeFetch(`${apiUrl}/api/college/collab/request?status=pending`),
+          safeFetch(`${apiUrl}/api/college/mentors`)
         ]);
+
+        // 4. If the user navigated away while these were downloading, stop processing!
+        if (controller.signal.aborted) return;
 
         let pendingJobsCount = 0;
         let recentJobsList = [];
@@ -48,7 +59,7 @@ function CollegeDashboard() {
           const jobsData = await jobsRes.json();
           const jobsArray = jobsData.data?.jobRequests || jobsData.jobs || [];
           pendingJobsCount = jobsArray.length;
-          recentJobsList = jobsArray.slice(0, 3); // Take top 3
+          recentJobsList = jobsArray.slice(0, 3);
         }
         
         let pendingCollabsList = [];
@@ -71,12 +82,11 @@ function CollegeDashboard() {
           collaboratedCount = (dashboardData.data?.collaboratedCount || 0);
         }
 
-        
         // Set the aggregated state
         setStats({
-          students: studentsCount, // Replace with actual student count fetch
+          students: studentsCount, 
           mentors: mentorsCount,
-          collaborations: collaboratedCount, // Replace with actual accepted collabs fetch
+          collaborations: collaboratedCount, 
           pendingJobs: pendingJobsCount,
         });
         
@@ -84,13 +94,24 @@ function CollegeDashboard() {
         setPendingCollabs(pendingCollabsList);
 
       } catch (error) {
+        // 5. Ignore the error if it was caused by our intentional cancellation
+        if (error.name === 'AbortError') {
+          console.log("Dashboard fetch aborted cleanly.");
+          return;
+        }
         console.error("Dashboard fetch error:", error);
       } finally {
-        setIsLoading(false);
+        // 6. Only remove the loading spinner if the component is still alive
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchDashboardStats();
+
+    // 7. Cleanup: If the user clicks a different sidebar link, kill all 4 fetches instantly
+    return () => controller.abort();
   }, [apiUrl]);
 
   if (isLoading) {

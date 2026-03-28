@@ -18,10 +18,11 @@ const formatDate = (dateString) => {
 
 function CollegeJobsPage() {
   const { college } = useOutletContext();
-  const navigate = useNavigate(); // Added for navigation
+  const navigate = useNavigate();
 
   const [jobs, setJobs] = useState([]);
   const [mentors, setMentors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // 👈 Added loading state
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("PENDING");
@@ -32,17 +33,21 @@ function CollegeJobsPage() {
   const apiUrl = import.meta.env.VITE_API_URL;
 
   /* ---------------- FETCH JOBS ---------------- */
-  const fetchJobs = async () => {
+  const fetchJobs = async (signal) => {
+    setIsLoading(true); // 👈 Turn loading ON when fetch starts
     try {
       const res = await fetch(
         `${apiUrl}/api/college/job/requests?filter=${filter}`,
-        { credentials: "include" }
+        { 
+          credentials: "include",
+          signal: signal 
+        }
       );
 
       if (!res.ok) return;
 
       const data = await res.json();
-      const jobsFromApi = data.data.jobRequests || data.jobs || [];
+      const jobsFromApi = data.data?.jobRequests || data.jobs || [];
 
       setJobs(
         jobsFromApi.map((job) => ({
@@ -56,28 +61,40 @@ function CollegeJobsPage() {
         }))
       );
     } catch (err) {
+      if (err.name === 'AbortError') return; 
       console.error(err.message);
+    } finally {
+      // 👈 Turn loading OFF only if the request wasn't cancelled
+      if (!signal || !signal.aborted) {
+        setIsLoading(false);
+      }
     }
   };
 
-  /* 🔴 IMPORTANT FIX: do NOT refetch while modal is open */
+  /* ---------------- USE EFFECTS ---------------- */
   useEffect(() => {
     if (selectedJob) return;
-    fetchJobs();
+    
+    const controller = new AbortController();
+    fetchJobs(controller.signal);
+
+    return () => controller.abort();
   }, [filter, apiUrl, selectedJob]);
 
-  /* ---------------- FETCH MENTORS ---------------- */
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchMentors = async () => {
       try {
         const res = await fetch(`${apiUrl}/api/college/mentors`, {
           credentials: "include",
+          signal: controller.signal 
         });
 
         if (!res.ok) return;
 
         const data = await res.json();
-        const mentorsFromApi = data.data.mentors || data.mentors || [];
+        const mentorsFromApi = data.data?.mentors || data.mentors || [];
 
         setMentors(
           mentorsFromApi.map((m) => ({
@@ -86,14 +103,17 @@ function CollegeJobsPage() {
           }))
         );
       } catch (err) {
+        if (err.name === 'AbortError') return; 
         console.error(err.message);
       }
     };
 
     fetchMentors();
+
+    return () => controller.abort();
   }, [apiUrl]);
 
-  /* ---------------- FILTER ---------------- */
+  /* ---------------- FILTER & HANDLERS ---------------- */
   const filteredJobs = useMemo(() => {
     return jobs.filter(
       (job) =>
@@ -102,9 +122,8 @@ function CollegeJobsPage() {
     );
   }, [jobs, filter, search]);
 
-  /* ---------------- REJECT JOB ---------------- */
   const rejectJobHandler = async (e, jobId) => {
-    e.stopPropagation(); // Prevents card navigation
+    e.stopPropagation(); 
     setJobs((prev) => prev.filter((j) => j.id !== jobId));
 
     try {
@@ -120,9 +139,8 @@ function CollegeJobsPage() {
     }
   };
 
-  /* ---------------- APPROVE JOB ---------------- */
   const approveAndOpenModal = (e, job) => {
-    e.stopPropagation(); // Prevents card navigation
+    e.stopPropagation(); 
     setSelectedJob({ ...job, status: "ASSIGN_MENTOR" });
     setFilter("ASSIGN_MENTOR");
 
@@ -146,7 +164,6 @@ function CollegeJobsPage() {
     })();
   };
 
-  /* ---------------- ASSIGN MENTOR ---------------- */
   const assignMentorHandler = async () => {
     try {
       const res = await fetch(
@@ -190,7 +207,6 @@ function CollegeJobsPage() {
       <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
           
-          {/* SEARCH */}
           <input
             className="search-input"
             placeholder="Search job titles..."
@@ -199,7 +215,6 @@ function CollegeJobsPage() {
             style={{ minWidth: '250px' }}
           />
 
-          {/* FILTERS */}
           <div className="filter-tabs" style={{ margin: 0 }}>
             {["PENDING", "CURRENT", "PAST", "ASSIGN_MENTOR"].map((f) => (
               <button
@@ -220,7 +235,12 @@ function CollegeJobsPage() {
           {filter.replace("_", " ")} Jobs ({filteredJobs.length})
         </h3>
 
-        {filteredJobs.length === 0 ? (
+        {/* 👈 Updated 3-way check: Loading -> Empty -> Grid */}
+        {isLoading ? (
+          <div className="dashboard-loading" style={{ padding: '4rem 0', textAlign: 'center', color: '#64748b', fontSize: '1.2rem', fontWeight: 600 }}>
+             Loading jobs...
+          </div>
+        ) : filteredJobs.length === 0 ? (
           <div className="empty-state" style={{ padding: '3rem', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1', flexGrow: 1 }}>
             <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📭</span>
             <p style={{ margin: 0, color: '#64748b' }}>No jobs found for the selected filter.</p>
@@ -231,7 +251,7 @@ function CollegeJobsPage() {
               <div 
                 key={job.id} 
                 className="job-card-soft" 
-                onClick={() => navigate(`/college/jobs/${job.id}`)} // 👈 Navigation added here
+                onClick={() => navigate(`/college/jobs/${job.id}`)}
                 style={{ 
                   padding: '1.25rem', 
                   backgroundColor: '#ffffff',
@@ -243,7 +263,7 @@ function CollegeJobsPage() {
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                  cursor: 'pointer' // 👈 Indicates it's clickable
+                  cursor: 'pointer' 
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-3px)';
@@ -293,14 +313,14 @@ function CollegeJobsPage() {
                       <button
                         className="btn-success"
                         style={{ flex: 1, padding: '8px', borderRadius: '6px' }}
-                        onClick={(e) => approveAndOpenModal(e, job)} // 👈 e.stopPropagation() inside
+                        onClick={(e) => approveAndOpenModal(e, job)}
                       >
                         ✓
                       </button>
                       <button
                         className="btn-danger"
                         style={{ flex: 1, padding: '8px', borderRadius: '6px' }}
-                        onClick={(e) => rejectJobHandler(e, job.id)} // 👈 e.stopPropagation() inside
+                        onClick={(e) => rejectJobHandler(e, job.id)} 
                       >
                         ✕
                       </button>
@@ -312,7 +332,7 @@ function CollegeJobsPage() {
                       className="btn-primary"
                       style={{ width: '100%', padding: '8px', borderRadius: '6px' }}
                       onClick={(e) => {
-                        e.stopPropagation(); // 👈 Prevents navigation
+                        e.stopPropagation(); 
                         setSelectedJob(job);
                       }}
                     >

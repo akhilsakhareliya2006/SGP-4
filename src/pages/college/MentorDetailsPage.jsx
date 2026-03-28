@@ -25,34 +25,48 @@ function MentorDetailsPage() {
   const [filter, setFilter] = useState("jobs_current"); 
 
   /* ---------- FETCH MENTOR DETAILS ---------- */
-  const fetchMentorDetails = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const queryParam = filter ? `?filter=${filter}` : "";
-      const res = await fetch(`${apiUrl}/api/college/mentor/${id}${queryParam}`, {
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch mentor details");
-      }
-
-      setMentor(data.data);
-    } catch (err) {
-      console.error("Mentor details fetch error:", err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [apiUrl, id, filter]);
-
   useEffect(() => {
+    // 1. Create the controller to protect against fast navigation AND fast filter clicking
+    const controller = new AbortController();
+
+    const fetchMentorDetails = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const queryParam = filter ? `?filter=${filter}` : "";
+        const res = await fetch(`${apiUrl}/api/college/mentor/${id}${queryParam}`, {
+          credentials: "include",
+          signal: controller.signal // 👈 Kills the request if the component unmounts OR the filter changes
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to fetch mentor details");
+        }
+
+        setMentor(data.data);
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log("Fetch aborted due to rapid filter change or navigation");
+          return; // 👈 Silently exit, avoiding memory leaks and race conditions
+        }
+        console.error("Mentor details fetch error:", err);
+        setError(err.message);
+      } finally {
+        // 2. Only turn off the loading skeleton if this specific request wasn't cancelled
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
     fetchMentorDetails();
-  }, [fetchMentorDetails]);
+
+    // 3. Cleanup: Abort the fetch if the user leaves the page or clicks a new filter tab early
+    return () => controller.abort();
+  }, [apiUrl, id, filter]);
 
   if (isLoading && !mentor) {
     return <div className="dashboard-loading">Loading mentor details...</div>;

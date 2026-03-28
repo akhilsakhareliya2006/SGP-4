@@ -26,34 +26,46 @@ function JobDetailsPage() {
   const [error, setError] = useState(null);
 
   /* ---------- FETCH JOB DETAILS ---------- */
-  const fetchJobDetails = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Assuming your route is exactly this based on your standard naming
-      const res = await fetch(`${apiUrl}/api/college/job/${id}`, {
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch job details");
-      }
-
-      setJob(data.data);
-    } catch (err) {
-      console.error("Job details fetch error:", err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [apiUrl, id]);
-
   useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchJobDetails = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const res = await fetch(`${apiUrl}/api/college/job/${id}`, {
+          credentials: "include",
+          signal: controller.signal // 👈 Instantly kills the request if they click "Back"
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to fetch job details");
+        }
+
+        setJob(data.data);
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log("Navigation changed: aborted fetching job details");
+          return; // Silently exit if WE cancelled it
+        }
+        console.error("Job details fetch error:", err);
+        setError(err.message);
+      } finally {
+        // Only turn off loading if the component is still alive
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
     fetchJobDetails();
-  }, [fetchJobDetails]);
+
+    // Cleanup: If the id changes or the user hits the back button, cancel the fetch!
+    return () => controller.abort();
+  }, [apiUrl, id]);
 
   if (isLoading && !job) {
     return <div className="dashboard-loading">Loading job details...</div>;

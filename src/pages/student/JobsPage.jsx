@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiMapPin, FiDollarSign, FiCalendar, FiClock, FiSearch } from "react-icons/fi";
 import { apiFetch } from "../../utils/api";
@@ -21,21 +21,31 @@ function JobsPage() {
     { id: "past", label: "Expired" },
   ];
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      setLoading(true);
-      try {
-        const res = await apiFetch(`/api/student/jobs?filter=${activeFilter}&limit=100`);
-        const fetchedJobs = res.data?.jobs || res.data || [];
-        setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
-      } catch (err) {
-        console.error("Failed to fetch jobs:", err);
-      } finally {
+  /* ---------------- OPTIMIZED FETCH ---------------- */
+  const fetchJobs = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      // 👈 Pass the signal to apiFetch
+      const res = await apiFetch(`/api/student/jobs?filter=${activeFilter}&limit=100`, { signal });
+      const fetchedJobs = res.data?.jobs || res.data || [];
+      
+      setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
+    } catch (err) {
+      if (err.name === 'AbortError' || err.message?.includes('abort')) return; // 👈 Ignore intentional aborts from clicking filters too fast
+      console.error("Failed to fetch jobs:", err);
+    } finally {
+      if (!signal || !signal.aborted) { // 👈 Protect loading state
         setLoading(false);
       }
-    };
-    fetchJobs();
-  }, [activeFilter]);
+    }
+  }, [activeFilter]); // 👈 Re-run the function generation when the filter changes
+
+  useEffect(() => {
+    const controller = new AbortController(); // 👈 Create controller
+    fetchJobs(controller.signal);
+    
+    return () => controller.abort(); // 👈 Instantly cancel the pending request if the user clicks a new filter or navigates away
+  }, [fetchJobs]);
 
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import studentLogo from "../../assets/images/H_logo.png";
@@ -29,7 +29,6 @@ function SideNavBar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const [student, setStudent] = useState(null);
-  // 🚨 1. This MUST start as true so the app waits for the API
   const [isLoading, setIsLoading] = useState(true); 
 
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -41,25 +40,46 @@ function SideNavBar() {
       try {
         const res = await apiFetch("/api/auth/me");
         
-        // Ensure we are grabbing the actual user object securely
         let userData = res.data;
         if (userData && userData.data) {
           userData = userData.data;
         }
 
-        console.log("👉 DEBUG - Fetched Student:", userData); // Check your browser console!
+        console.log("👉 DEBUG - Fetched Student:", userData); 
         
         setStudent(userData);
       } catch (err) {
         console.error(err);
         navigate("/login");
       } finally {
-        // ALWAYS turn off loading, even if it fails
         setIsLoading(false);
       }
     }
     fetchSession();
   }, [navigate]);
+
+  /* -------- Context Update Function -------- */
+  // 👈 NEW: Safely merges new data into the global student state
+  const updateStudent = useCallback((newData) => {
+    setStudent(prev => {
+      if (!prev) return prev;
+      
+      // Deep merge if the update includes the nested 'student' object
+      if (newData.student) {
+        return {
+          ...prev,
+          ...newData,
+          student: {
+            ...prev.student,
+            ...newData.student
+          }
+        };
+      }
+      
+      // Otherwise, standard merge
+      return { ...prev, ...newData };
+    });
+  }, []);
 
   /* -------- Logout -------- */
   const handleLogout = async (e) => {
@@ -81,23 +101,21 @@ function SideNavBar() {
   const navClass = ({ isActive }) =>
     isActive ? "nav-item nav-item-active" : "nav-item";
 
-  /* ================= RENDER GUARDS (ORDER IS CRITICAL) ================= */
-
-  // GUARD 1: Still waiting for API? Show Loading.
+  /* ================= RENDER GUARDS ================= */
   if (isLoading) {
     return <div className="dashboard-loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading Student Panel...</div>;
   }
 
-  // GUARD 2: Did the API fail and student is STILL null? Stop the crash!
   if (!student) {
     return null; 
   }
 
-  // GUARD 3: Because we passed the null check above, it is now 100% safe to check the profile.
   if (student.hasCompletedProfile === false) {
     return (
       <CompleteProfilePage 
         onComplete={() => {
+          // You could optionally use updateStudent({ hasCompletedProfile: true }) here 
+          // instead of reloading if you want a smoother transition!
           window.location.reload(); 
         }} 
       />
@@ -215,8 +233,8 @@ function SideNavBar() {
         </header>
 
         <main className="content-wrapper">
-          {/* student data accessible in pages */}
-          <Outlet context={{ student }} />
+          {/* 👈 NEW: Passing updateStudent down to all child pages */}
+          <Outlet context={{ student, updateStudent }} />
         </main>
       </div>
     </div>

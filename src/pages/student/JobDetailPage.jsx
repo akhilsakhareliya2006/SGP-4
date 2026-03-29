@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { 
@@ -21,21 +21,32 @@ function JobDetailsPage() {
   
   const idempotencyKeyRef = useRef(null);
 
-  /* ---------------- FETCH JOB DETAILS ---------------- */
-  useEffect(() => {
-    const fetchJobDetail = async () => {
-      try {
-        const res = await apiFetch(`/api/student/job/${jobId}`);
-        setJob(res.data?.data ?? res.data);
-      } catch (err) {
-        console.error(err);
-        setMessage({ type: "error", text: err?.message || "Access Restricted or Job Not Found" });
-      } finally {
+  /* ---------------- OPTIMIZED FETCH JOB DETAILS ---------------- */
+  const fetchJobDetail = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      // 👈 Pass the signal to apiFetch
+      const res = await apiFetch(`/api/student/job/${jobId}`, { signal });
+      setJob(res.data?.data ?? res.data);
+    } catch (err) {
+      if (err.name === 'AbortError' || err.message?.includes('abort')) return; // 👈 Ignore intentional aborts
+      console.error(err);
+      setMessage({ type: "error", text: err?.message || "Access Restricted or Job Not Found" });
+    } finally {
+      if (!signal || !signal.aborted) { // 👈 Protect loading state
         setLoading(false);
       }
-    };
-    if (jobId) fetchJobDetail();
+    }
   }, [jobId]);
+
+  useEffect(() => {
+    if (!jobId) return;
+
+    const controller = new AbortController(); // 👈 Create controller
+    fetchJobDetail(controller.signal);
+
+    return () => controller.abort(); // 👈 Cleanup on fast navigation
+  }, [fetchJobDetail, jobId]);
 
   /* ---------------- APPLY LOGIC ---------------- */
   const handleApply = async () => {

@@ -30,7 +30,7 @@ function ColloborationPage() {
   // --- UI & Filter States ---
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [requestingId, setRequestingId] = useState(null); // Tracks which college is being requested
 
   // --- Data States ---
@@ -56,7 +56,8 @@ function ColloborationPage() {
   ];
 
   /* ---------------- FETCH COLLEGES (Server-Side Paginated) ---------------- */
-  const fetchColleges = useCallback(async () => {
+  /* ---------------- FETCH COLLEGES (Server-Side Paginated) ---------------- */
+  const fetchColleges = useCallback(async (signal = null) => { // 👈 1. Add signal parameter
     try {
       setLoading(true);
       const queryParams = new URLSearchParams({
@@ -65,11 +66,11 @@ function ColloborationPage() {
         limit,
       });
 
-      // Matches your backend route
       const res = await fetch(`${apiUrl}/api/company/college?${queryParams}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        signal, // 👈 2. Attach the abort signal
       });
 
       const data = await res.json();
@@ -79,20 +80,22 @@ function ColloborationPage() {
         if (data.data.pagination) setPagination(data.data.pagination);
       }
     } catch (err) {
+      if (err.name === 'AbortError') return; // 👈 3. Silently ignore tab switches
       console.error("Error fetching colleges:", err);
     } finally {
-      setLoading(false);
+      // 👈 4. Only remove loading spinner if the request wasn't cancelled
+      if (!signal || !signal.aborted) {
+        setLoading(false);
+      }
     }
   }, [apiUrl, filter, page, limit]);
 
-  // Reset page to 1 when filter changes
+  // 👈 5. Create AbortController inside a single useEffect
   useEffect(() => {
-    setPage(1);
-  }, [filter]);
-
-  // Fetch when page or filter changes
-  useEffect(() => {
-    fetchColleges();
+    const controller = new AbortController();
+    fetchColleges(controller.signal);
+    
+    return () => controller.abort(); // Cleanup on unmount or dependency change
   }, [fetchColleges]);
 
   /* ---------------- FRONTEND SEARCH (Over current page) ---------------- */
@@ -231,7 +234,10 @@ function ColloborationPage() {
             <button
               key={tab.value}
               className={`filter-pill ${filter === tab.value ? "active" : ""}`}
-              onClick={() => setFilter(tab.value)}
+              onClick={() => {
+                setFilter(tab.value); // 👈 Update filter
+                setPage(1);
+              }}
             >
               {tab.label}
             </button>

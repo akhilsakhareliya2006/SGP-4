@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiDollarSign, FiCalendar, FiCheckCircle, FiXCircle, FiStar, FiSearch, FiClock } from "react-icons/fi";
 import { apiFetch } from "../../utils/api";
@@ -21,21 +21,31 @@ function ApplicationsPage() {
     { id: "rejected", label: "Rejected" },
   ];
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      setLoading(true);
-      try {
-        const res = await apiFetch(`/api/student/jobs?filter=${activeFilter}&limit=100`);
-        const fetchedJobs = res.data?.jobs || res.data || [];
-        setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
-      } catch (err) {
-        console.error("Failed to fetch applications:", err);
-      } finally {
+  /* ---------------- OPTIMIZED FETCH ---------------- */
+  const fetchApplications = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      // 👈 Pass the signal to apiFetch
+      const res = await apiFetch(`/api/student/jobs?filter=${activeFilter}&limit=100`, { signal });
+      const fetchedJobs = res.data?.jobs || res.data || [];
+      
+      setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
+    } catch (err) {
+      if (err.name === 'AbortError' || err.message?.includes('abort')) return; // 👈 Ignore intentional aborts from rapid filter clicking
+      console.error("Failed to fetch applications:", err);
+    } finally {
+      if (!signal || !signal.aborted) { // 👈 Protect loading state
         setLoading(false);
       }
-    };
-    fetchApplications();
-  }, [activeFilter]);
+    }
+  }, [activeFilter]); // 👈 Re-run when the active filter changes
+
+  useEffect(() => {
+    const controller = new AbortController(); // 👈 Create controller
+    fetchApplications(controller.signal);
+    
+    return () => controller.abort(); // 👈 Instantly cancel pending requests on tab switch or navigation
+  }, [fetchApplications]);
 
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => 

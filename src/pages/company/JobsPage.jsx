@@ -16,19 +16,28 @@ const formatDate = (dateString) => {
   });
 };
 
+// map UI filter -> API filter (Outside component to prevent re-renders)
+const filterMap = {
+  CURRENT: "current",
+  PAST: "past",
+  ACCEPTED: "accepted",
+  PENDING: "pending",
+};
+
 function CompanyJobsPage() {
   const apiUrl = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
 
   // --- UI & Filter States ---
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("CURRENT");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
 
   // --- Data States ---
   const [jobs, setJobs] = useState([]);
   const [skills, setSkills] = useState([]);
-  const [approvedColleges, setApprovedColleges] = useState([]); // 👈 Added for target colleges
+  const [approvedColleges, setApprovedColleges] = useState([]); 
   
   // --- Pagination State ---
   const [page, setPage] = useState(1);
@@ -44,26 +53,18 @@ function CompanyJobsPage() {
   const [jobForm, setJobForm] = useState({
     title: "",
     salary: "",
-    tenure: "", // 👈 Added
-    address: "", // 👈 Added
+    tenure: "", 
+    address: "", 
     dueDate: "",
-    selectedSkills: [], // 👈 Now stores IDs
-    selectedColleges: [], // 👈 Now stores IDs
+    selectedSkills: [], 
+    selectedColleges: [], 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // map UI filter -> API filter
-  const filterMap = {
-    CURRENT: "current",
-    PAST: "past",
-    ACCEPTED: "accepted",
-    PENDING: "pending",
-  };
-
-  /* ---------------- FETCH JOBS ---------------- */
-  const fetchJobs = useCallback(async () => {
+  /* ---------------- OPTIMIZED FETCH JOBS ---------------- */
+  const fetchJobs = useCallback(async (signal = null) => {
+    setLoading(true);
     try {
-      setLoading(true);
       const queryParams = new URLSearchParams({
         filter: filterMap[filter],
         page,
@@ -71,60 +72,60 @@ function CompanyJobsPage() {
       });
 
       const res = await fetch(`${apiUrl}/api/company/jobs?${queryParams}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
+        signal, 
         credentials: "include",
       });
 
       const data = await res.json();
-      
       if (res.ok && data.data) {
         setJobs(data.data.jobs || []);
         if (data.data.pagination) setPagination(data.data.pagination);
       }
     } catch (err) {
+      if (err.name === 'AbortError') return; 
       console.error("Error fetching jobs:", err);
     } finally {
-      setLoading(false);
+      if (!signal || !signal.aborted) setLoading(false);
     }
   }, [apiUrl, filter, page, limit]);
 
+  // Main Effect for Jobs
   useEffect(() => {
-    setPage(1);
-  }, [filter]);
-
-  useEffect(() => {
-    fetchJobs();
+    const controller = new AbortController();
+    fetchJobs(controller.signal);
+    return () => controller.abort(); 
   }, [fetchJobs]);
 
-  /* ---------------- FETCH SKILLS & COLLEGES (For Modal) ---------------- */
+  /* ---------------- OPTIMIZED MODAL DATA FETCH ---------------- */
   useEffect(() => {
+    const controller = new AbortController();
+    
     const fetchModalData = async () => {
       try {
-        // 1. Fetch Skills
-        const skillsRes = await fetch(`${apiUrl}/api/company/skills?sortBy=name&sortOrder=asc`, {
-          credentials: "include",
-        });
-        const skillsData = await skillsRes.json();
-        if (skillsRes.ok && skillsData.data) {
-          setSkills(skillsData.data);
-        }
+        const [skillsRes, collabsRes] = await Promise.all([
+          fetch(`${apiUrl}/api/company/skills?sortBy=name&sortOrder=asc`, { 
+            signal: controller.signal, credentials: "include" 
+          }),
+          fetch(`${apiUrl}/api/company/college?filter=collaborated&limit=100`, { 
+            signal: controller.signal, credentials: "include" 
+          })
+        ]);
 
-        // 2. Fetch Approved Colleges
-        const collabsRes = await fetch(`${apiUrl}/api/company/college?filter=collaborated&limit=100`, {
-          credentials: "include",
-        });
+        const skillsData = await skillsRes.json();
         const collabsData = await collabsRes.json();
-        
-        // ✅ THE FIX: We drill down into collabsData.data.colleges instead of using .map()
-        if (collabsRes.ok && collabsData.data && collabsData.data.colleges) {
+
+        if (skillsRes.ok) setSkills(skillsData.data || []);
+        if (collabsRes.ok && collabsData.data?.colleges) {
           setApprovedColleges(collabsData.data.colleges);
         }
       } catch (err) {
+        if (err.name === 'AbortError') return;
         console.error("Error fetching modal data:", err);
       }
     };
+
     fetchModalData();
+    return () => controller.abort(); 
   }, [apiUrl]);
 
   /* ---------------- FRONTEND SEARCH ---------------- */
@@ -148,7 +149,6 @@ function CompanyJobsPage() {
     setIsSubmitting(true);
 
     try {
-      // Structure payload exactly as backend expects
       const payload = {
         title: jobForm.title,
         salary: jobForm.salary ? Number(jobForm.salary) : undefined,
@@ -208,15 +208,8 @@ function CompanyJobsPage() {
     });
   };
 
-  const navigate = useNavigate(); // Added for navigation
-
-
   return (
-    <div className="employees-page" style={{
-    height: "100%",
-    overflowY: "auto",
-    paddingBottom: "80px"
-  }}>
+    <div className="employees-page" style={{ height: "100%", overflowY: "auto", paddingBottom: "80px" }}>
       
       {/* ================= HEADER ================= */}
       <div className="employees-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -248,7 +241,11 @@ function CompanyJobsPage() {
             <button
               key={f}
               className={`filter-pill ${filter === f ? "active" : ""}`}
-              onClick={() => setFilter(f)}
+              onClick={() => {
+                // OPTIMIZATION: Update both simultaneously to prevent double renders
+                setFilter(f);
+                setPage(1); 
+              }}
             >
               {f}
             </button>
@@ -441,9 +438,9 @@ function CompanyJobsPage() {
                     ) : (
                       skills.map((skill) => (
                         <button
-                          key={skill.id} // 👈 Using ID instead of Name
+                          key={skill.id} 
                           type="button"
-                          onClick={() => handleSkillToggle(skill.id)} // 👈 Toggling ID
+                          onClick={() => handleSkillToggle(skill.id)} 
                           style={{
                             padding: '4px 10px', borderRadius: '20px', fontSize: '0.85rem', cursor: 'pointer', border: '1px solid',
                             transition: 'all 0.2s ease',

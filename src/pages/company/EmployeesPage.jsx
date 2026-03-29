@@ -67,7 +67,7 @@ function EmployeesPage() {
   }, [search]);
 
   /* ---------- Fetch Employees (Server-Side) ---------- */
-  const fetchEmployees = useCallback(async () => {
+  const fetchEmployees = useCallback(async (signal = null) => {
     setIsLoading(true);
     try {
       // Build query string based on backend expectations
@@ -81,6 +81,7 @@ function EmployeesPage() {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        signal, // 👈 Pass the abort signal down to the fetch call
       });
 
       const data = await res.json();
@@ -99,14 +100,29 @@ function EmployeesPage() {
         if (data.data.pagination) setPagination(data.data.pagination);
       }
     } catch (error) {
+      // 👈 Silently catch our intentional aborts
+      if (error.name === 'AbortError') {
+        console.log("Employee fetch aborted due to navigation or new search.");
+        return;
+      }
       console.error("Error fetching employees:", error);
     } finally {
-      setIsLoading(false);
+      // 👈 Only remove the loading state if the request wasn't cancelled
+      if (!signal || !signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [apiUrl, page, limit, debouncedSearch]);
 
   useEffect(() => {
-    fetchEmployees();
+    const controller = new AbortController();
+    
+    // Pass the signal when the effect triggers
+    fetchEmployees(controller.signal);
+
+    // Cleanup: Fire the abort signal if the dependencies change (like page or search) 
+    // or if the component unmounts
+    return () => controller.abort();
   }, [fetchEmployees]);
 
   /* ---------- Export Employees ---------- */

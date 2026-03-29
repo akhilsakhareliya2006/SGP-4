@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiDollarSign, FiCalendar, FiSearch, FiClock, FiCheckCircle, FiXCircle, FiFilter, FiList } from "react-icons/fi";
 import { apiFetch } from "../../utils/api";
@@ -24,42 +24,47 @@ function MentorApprovedPage() {
     { id: "mentor_approval_rejected", label: "Rejected" },
   ];
 
-  /* ---------------- FETCH & MERGE LOGIC ---------------- */
-  useEffect(() => {
-    const fetchMentorApprovals = async () => {
-      setLoading(true);
-      try {
-        if (activeFilter === "all") {
-          // Fetch all three categories concurrently to build the "All" view
-          const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
-            apiFetch(`/api/student/jobs?filter=mentor_approval_pending&limit=100`),
-            apiFetch(`/api/student/jobs?filter=mentor_approval_approved&limit=100`),
-            apiFetch(`/api/student/jobs?filter=mentor_approval_rejected&limit=100`)
-          ]);
+  /* ---------------- OPTIMIZED FETCH & MERGE LOGIC ---------------- */
+  const fetchMentorApprovals = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      if (activeFilter === "all") {
+        // 👈 Pass the signal to all three concurrent requests
+        const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
+          apiFetch(`/api/student/jobs?filter=mentor_approval_pending&limit=100`, { signal }),
+          apiFetch(`/api/student/jobs?filter=mentor_approval_approved&limit=100`, { signal }),
+          apiFetch(`/api/student/jobs?filter=mentor_approval_rejected&limit=100`, { signal })
+        ]);
 
-          // Extract arrays and attach a frontend status tag for the badges
-          const pending = (pendingRes.data?.jobs || pendingRes.data || []).map(j => ({ ...j, _status: "pending" }));
-          const approved = (approvedRes.data?.jobs || approvedRes.data || []).map(j => ({ ...j, _status: "approved" }));
-          const rejected = (rejectedRes.data?.jobs || rejectedRes.data || []).map(j => ({ ...j, _status: "rejected" }));
+        const pending = (pendingRes.data?.jobs || pendingRes.data || []).map(j => ({ ...j, _status: "pending" }));
+        const approved = (approvedRes.data?.jobs || approvedRes.data || []).map(j => ({ ...j, _status: "approved" }));
+        const rejected = (rejectedRes.data?.jobs || rejectedRes.data || []).map(j => ({ ...j, _status: "rejected" }));
 
-          setJobs([...pending, ...approved, ...rejected]);
-        } else {
-          // Fetch just the specific filter
-          const res = await apiFetch(`/api/student/jobs?filter=${activeFilter}&limit=100`);
-          const fetchedJobs = res.data?.jobs || res.data || [];
-          
-          // Determine tag based on active filter
-          const statusTag = activeFilter.includes("approved") ? "approved" : activeFilter.includes("rejected") ? "rejected" : "pending";
-          setJobs((Array.isArray(fetchedJobs) ? fetchedJobs : []).map(j => ({ ...j, _status: statusTag })));
-        }
-      } catch (err) {
-        console.error("Failed to fetch mentor approvals:", err);
-      } finally {
+        setJobs([...pending, ...approved, ...rejected]);
+      } else {
+        // 👈 Pass the signal to the single request
+        const res = await apiFetch(`/api/student/jobs?filter=${activeFilter}&limit=100`, { signal });
+        const fetchedJobs = res.data?.jobs || res.data || [];
+        
+        const statusTag = activeFilter.includes("approved") ? "approved" : activeFilter.includes("rejected") ? "rejected" : "pending";
+        setJobs((Array.isArray(fetchedJobs) ? fetchedJobs : []).map(j => ({ ...j, _status: statusTag })));
+      }
+    } catch (err) {
+      if (err.name === 'AbortError' || err.message?.includes('abort')) return; // 👈 Ignore intentional aborts from rapid tab switching
+      console.error("Failed to fetch mentor approvals:", err);
+    } finally {
+      if (!signal || !signal.aborted) { // 👈 Protect loading state
         setLoading(false);
       }
-    };
-    fetchMentorApprovals();
+    }
   }, [activeFilter]);
+
+  useEffect(() => {
+    const controller = new AbortController(); // 👈 Create controller
+    fetchMentorApprovals(controller.signal);
+    
+    return () => controller.abort(); // 👈 Instantly cancel pending requests on filter change or unmount
+  }, [fetchMentorApprovals]);
 
   /* ---------------- SEARCH & SORT LOGIC ---------------- */
   const processedJobs = useMemo(() => {

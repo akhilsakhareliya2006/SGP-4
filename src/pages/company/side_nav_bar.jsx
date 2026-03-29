@@ -30,6 +30,8 @@ function DashboardLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const controller = new AbortController(); // 👈 1. Create the controller
+
     const fetchUser = async () => {
       try {
         const res = await fetch(`${apiUrl}/api/company/profile`, {
@@ -38,6 +40,7 @@ function DashboardLayout() {
             "Content-Type": "application/json",
           },
           credentials: "include",
+          signal: controller.signal // 👈 2. Attach the abort signal
         });
 
         if (res.ok) {
@@ -49,16 +52,20 @@ function DashboardLayout() {
           navigate("/login");
         }
       } catch (error) {
+        if (error.name === 'AbortError') return; // 👈 3. Ignore intentional aborts
         console.error("Failed to fetch user:", error);
         navigate("/login");
       } finally {
-        // Stop loading whether success or fail
-        setIsLoading(false);
+        if (!controller.signal.aborted) { // 👈 4. Guard the loading state
+          setIsLoading(false);
+        }
       }
     };
 
     fetchUser();
-  }, [navigate]);
+
+    return () => controller.abort(); // 👈 5. Cleanup to prevent memory leaks
+  }, [apiUrl, navigate]);
 
   const handleLogout = async (e) => {
     e.stopPropagation();

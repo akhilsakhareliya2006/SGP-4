@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* ---------- Helpers ---------- */
@@ -13,7 +13,7 @@ const formatDate = (dateString) => {
 
 function ApplicationsPage() {
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // 👈 Starts true to prevent flash of empty state
   const apiUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
 
@@ -22,20 +22,33 @@ function ApplicationsPage() {
   const [filter, setFilter] = useState("LIVE"); // ALL, LIVE, PENDING, EXPIRED
   const [sortBy, setSortBy] = useState("ASC"); // ASC (soonest first), DESC (latest first)
 
-  useEffect(() => {
-    const fetchOverview = async () => {
-      try {
-        const res = await fetch(`${apiUrl}/api/company/applications/overview`, { credentials: "include" });
-        const data = await res.json();
-        if (res.ok) setJobs(data.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  /* ---------------- OPTIMIZED FETCH ---------------- */
+  const fetchOverview = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/company/applications/overview`, { 
+        credentials: "include",
+        signal // 👈 Attach the abort signal
+      });
+      const data = await res.json();
+      if (res.ok) setJobs(data.data);
+    } catch (err) {
+      if (err.name === 'AbortError') return; // 👈 Silently ignore tab switches/navigation
+      console.error(err);
+    } finally {
+      if (!signal || !signal.aborted) {
+        setLoading(false); // 👈 Only remove loading if component is active
       }
-    };
-    fetchOverview();
+    }
   }, [apiUrl]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchOverview(controller.signal);
+    
+    // Cleanup: kill the fetch if the user navigates away fast
+    return () => controller.abort();
+  }, [fetchOverview]);
 
   /* ---------------- DATA PROCESSING ---------------- */
   const processedJobs = useMemo(() => {
@@ -73,7 +86,7 @@ function ApplicationsPage() {
     return filtered;
   }, [jobs, search, filter, sortBy]);
 
-  if (loading) return <div className="dashboard-loading" style={{ height: '100vh' }}>Loading pipeline overview...</div>;
+  // ❌ DELETED: if (loading) return ... (The Early Return is gone!)
 
   return (
     <div style={{ 
@@ -149,7 +162,12 @@ function ApplicationsPage() {
           gap: '1.5rem' 
         }}>
           
-          {processedJobs.length === 0 ? (
+          {/* 👇 INLINE LOADING UI CHECK 👇 */}
+          {loading ? (
+            <div className="dashboard-loading" style={{ gridColumn: '1 / -1', padding: '5rem 0', textAlign: 'center', color: '#64748b', fontSize: '1.2rem', fontWeight: 600 }}>
+              Loading pipeline overview...
+            </div>
+          ) : processedJobs.length === 0 ? (
             <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '4rem', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
                <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '1rem' }}>📭</span>
                <h3 style={{ margin: '0 0 0.5rem 0', color: '#0f172a' }}>No jobs match these filters</h3>
@@ -173,7 +191,7 @@ function ApplicationsPage() {
                   onClick={() => navigate(`/company/applications/${job.id}`)}
                   style={{ 
                     padding: '1.25rem', // Reduced padding from 1.5rem to 1.25rem to make it tighter
-                    maxWidth: '450px', // 👇 Prevents a single card from stretching across the entire screen
+                    maxWidth: '450px', // Prevents a single card from stretching across the entire screen
                     cursor: 'pointer', 
                     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                     borderTop: `4px solid ${statusConfig.border}`,

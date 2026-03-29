@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiMapPin, FiDollarSign, FiCalendar, FiClock, FiBriefcase } from "react-icons/fi";
 import { apiFetch } from "../../utils/api";
@@ -13,22 +13,31 @@ function ApplyPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const res = await apiFetch(`/api/student/jobs?filter=not_applied&limit=50`);
-        const fetchedJobs = res.data?.jobs || res.data || [];
-        console.log(res.data);
-        
-        setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
-      } catch (err) {
-        console.error("Failed to fetch jobs:", err);
-      } finally {
+  /* ---------------- OPTIMIZED FETCH ---------------- */
+  const fetchJobs = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      // 👈 Pass the signal in the options object to your apiFetch utility
+      const res = await apiFetch(`/api/student/jobs?filter=not_applied&limit=50`, { signal });
+      const fetchedJobs = res.data?.jobs || res.data || [];
+      
+      setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
+    } catch (err) {
+      if (err.name === 'AbortError' || err.message?.includes('abort')) return; // 👈 Ignore intentional aborts
+      console.error("Failed to fetch jobs:", err);
+    } finally {
+      if (!signal || !signal.aborted) { // 👈 Protect loading state
         setLoading(false);
       }
-    };
-    fetchJobs();
-  }, []);
+    }
+  }, []); // No dependencies needed since URL is static and apiFetch is imported
+
+  useEffect(() => {
+    const controller = new AbortController(); // 👈 Create controller
+    fetchJobs(controller.signal);
+    
+    return () => controller.abort(); // 👈 Cleanup on fast navigation
+  }, [fetchJobs]);
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) =>

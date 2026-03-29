@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { 
   FiBriefcase, FiCheckCircle, FiClock, FiStar, 
@@ -21,56 +21,43 @@ function StudentDashboard() {
     recommendedJobs: []
   });
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Concurrently fetch from the endpoints you already built!
-        const [
-          profileRes,
-          notAppliedRes,
-          pendingRes,
-          shortlistedRes,
-          hiredRes,
-          rejectedRes
-        ] = await Promise.all([
-          apiFetch("/api/student/profile").catch(() => null),
-          apiFetch("/api/student/jobs?filter=not_applied&limit=4").catch(() => ({ data: { jobs: [], pagination: { totalJobs: 0 } } })),
-          apiFetch("/api/student/jobs?filter=pending&limit=4").catch(() => ({ data: { jobs: [], pagination: { totalJobs: 0 } } })),
-          apiFetch("/api/student/jobs?filter=shortlisted&limit=1").catch(() => ({ data: { jobs: [], pagination: { totalJobs: 0 } } })),
-          apiFetch("/api/student/jobs?filter=hired&limit=1").catch(() => ({ data: { jobs: [], pagination: { totalJobs: 0 } } })),
-          apiFetch("/api/student/jobs?filter=rejected&limit=1").catch(() => ({ data: { jobs: [], pagination: { totalJobs: 0 } } }))
-        ]);
+  /* ---------------- OPTIMIZED DASHBOARD FETCH ---------------- */
+  const fetchDashboardData = useCallback(async (signal) => {
+    try {
+      // Look how clean this is now! Just TWO requests instead of six.
+      const [profileRes, dashboardRes] = await Promise.all([
+        apiFetch("/api/student/profile", { signal }).catch((err) => { if (err.name !== 'AbortError') return null; throw err; }),
+        apiFetch("/api/student/dashboard-overview", { signal }).catch((err) => { if (err.name !== 'AbortError') return null; throw err; })
+      ]);
 
-        // Safely extract counts from your backend's pagination object
-        const available = notAppliedRes?.data?.pagination?.totalJobs || 0;
-        const pending = pendingRes?.data?.pagination?.totalJobs || 0;
-        const shortlisted = shortlistedRes?.data?.pagination?.totalJobs || 0;
-        const hired = hiredRes?.data?.pagination?.totalJobs || 0;
-        const rejected = rejectedRes?.data?.pagination?.totalJobs || 0;
-        
+      const profileData = profileRes?.data?.data || profileRes?.data || student;
+      const dashData = dashboardRes?.data?.data || dashboardRes?.data;
+
+      if (dashData) {
         setDashboardData({
-          profile: profileRes?.data?.data || profileRes?.data || student,
-          stats: {
-            available,
-            pending,
-            shortlisted,
-            hired,
-            totalApplied: pending + shortlisted + hired + rejected
-          },
-          // Attach statuses so we can render badges
-          recentApplications: (pendingRes?.data?.jobs || []).map(j => ({ ...j, _status: 'pending' })).slice(0, 4),
-          recommendedJobs: (notAppliedRes?.data?.jobs || []).slice(0, 4)
+          profile: profileData,
+          stats: dashData.stats,
+          recentApplications: dashData.recentApplications,
+          recommendedJobs: dashData.recommendedJobs
         });
+      }
 
-      } catch (err) {
-        console.error("Dashboard fetch error:", err);
-      } finally {
+    } catch (err) {
+      if (err.name === 'AbortError' || err.message?.includes('abort')) return;
+      console.error("Dashboard fetch error:", err);
+    } finally {
+      if (!signal || !signal.aborted) {
         setLoading(false);
       }
-    };
-
-    fetchDashboardData();
+    }
   }, [student]);
+
+  useEffect(() => {
+    const controller = new AbortController(); // 👈 Create controller
+    fetchDashboardData(controller.signal);
+    
+    return () => controller.abort(); // 👈 Cleanup instantly kills all 6 requests if unmounted
+  }, [fetchDashboardData]);
 
   const renderBadge = (status) => {
     const baseStyle = { padding: '4px 10px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '4px' };

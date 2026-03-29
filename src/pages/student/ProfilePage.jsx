@@ -12,8 +12,8 @@ function getInitials(name) {
 }
 
 function ProfilePage() {
-  // Grab the student data that is already fetched by the SideNavBar
-  const { student } = useOutletContext();
+  // NOTE: If your context provider has an 'updateStudent' function, destructure it here too.
+  const { student, updateStudent } = useOutletContext();
   
   const [activeTab, setActiveTab] = useState("general");
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -21,21 +21,33 @@ function ProfilePage() {
   // --- Profile State ---
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+  
   const [formData, setFormData] = useState({
-    branch: student?.student?.branch || "",
-    year: student?.student?.year?.toString() || "1",
-    aboutMe: student?.student?.aboutMe || "",
-    resume: student?.student?.resume || "", // Assuming resume is a URL/Drive link for now
+    branch: "", year: "1", aboutMe: "", resume: "",
   });
 
   // --- Skills State ---
   const [skillInput, setSkillInput] = useState("");
   const [skillsLoading, setSkillsLoading] = useState(false);
-  const [skillsList, setSkillsList] = useState(student?.student?.skills || []);
+  const [skillsList, setSkillsList] = useState([]);
 
   // --- Password State ---
   const [passwordData, setPasswordData] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  /* ================= STATE SYNCHRONIZATION ================= */
+  // FIX 1: Ensure formData and skills populate if context loads AFTER mount
+  useEffect(() => {
+    if (student?.student && !isEditingProfile) {
+      setFormData({
+        branch: student.student.branch || "",
+        year: student.student.year?.toString() || "1",
+        aboutMe: student.student.aboutMe || "",
+        resume: student.student.resume || "",
+      });
+      setSkillsList(student.student.skills || []);
+    }
+  }, [student, isEditingProfile]);
 
   // Clear messages when switching tabs
   useEffect(() => { setMessage({ type: "", text: "" }); }, [activeTab]);
@@ -58,13 +70,16 @@ function ProfilePage() {
           resume: formData.resume
         }),
       });
+      updateStudent({ student: res.data });
+      
       setMessage({ type: "success", text: "Profile updated successfully!" });
       setIsEditingProfile(false);
       
-      // Update local student context if possible, or force reload if needed
-      if (res.data) {
-        student.student = { ...student.student, ...res.data };
-      }
+      // FIX 2: Do not mutate context directly (e.g., student.student = res.data).
+      // If you need the SideNavBar to update immediately, you must call a state-updating 
+      // function passed down from the context, e.g., updateStudentContext(res.data)
+      // For now, the local state will stay updated via the form fields.
+
     } catch (err) {
       setMessage({ type: "error", text: err?.message || "Failed to update profile." });
     } finally {
@@ -86,7 +101,7 @@ function ProfilePage() {
         body: JSON.stringify({ name: skillInput }),
       });
       
-      setSkillsList([...skillsList, { skill: { name: skillInput.toUpperCase() } }]);
+      setSkillsList(prev => [...prev, { skill: { name: skillInput.toUpperCase() } }]);
       setSkillInput("");
       setMessage({ type: "success", text: "Skill added successfully!" });
     } catch (err) {
@@ -106,7 +121,6 @@ function ProfilePage() {
     setMessage({ type: "", text: "" });
 
     try {
-      // NOTE: Ensure your auth route for changing passwords matches this endpoint
       await apiFetch("/api/auth/change-password", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

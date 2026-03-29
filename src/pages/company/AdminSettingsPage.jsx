@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 
 function CompanySettingsPage() {
-  const { company: contextCompany } = useOutletContext() || {};
   const apiUrl = import.meta.env.VITE_API_URL;
 
   // --- UI States ---
@@ -28,10 +27,17 @@ function CompanySettingsPage() {
 
   /* ---------------- FETCH PROFILE ---------------- */
   useEffect(() => {
+    const controller = new AbortController(); // 👈 1. Create the controller
+
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/company/profile`, { credentials: "include" });
+        const res = await fetch(`${apiUrl}/api/company/profile`, { 
+          credentials: "include",
+          signal: controller.signal // 👈 2. Attach the signal
+        });
+        
         const data = await res.json();
+        
         if (res.ok && data.data) {
           setProfileForm({
             name: data.data.name || "",
@@ -41,10 +47,14 @@ function CompanySettingsPage() {
           });
         }
       } catch (err) {
+        if (err.name === 'AbortError') return; // 👈 3. Silently ignore fast navigation
         console.error("Error fetching profile:", err);
       }
     };
+
     fetchProfile();
+
+    return () => controller.abort(); // 👈 4. Cleanup to prevent memory leaks
   }, [apiUrl]);
 
   /* ---------------- HANDLERS ---------------- */

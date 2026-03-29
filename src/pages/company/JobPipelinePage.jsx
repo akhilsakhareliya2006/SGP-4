@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 /* ---------- Helpers ---------- */
@@ -18,21 +18,29 @@ function JobPipelinePage() {
   const [jobData, setJobData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchPipeline = async () => {
+  /* ---------------- OPTIMIZED FETCH ---------------- */
+  const fetchPipeline = useCallback(async (signal = null) => {
+    setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/company/applications/pipeline/${jobId}`, { credentials: "include" });
+      const res = await fetch(`${apiUrl}/api/company/applications/pipeline/${jobId}`, { 
+        credentials: "include",
+        signal 
+      });
       const data = await res.json();
       if (res.ok) setJobData(data.data);
     } catch (err) {
+      if (err.name === 'AbortError') return; // 👈 Ignore fast navigation
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!signal || !signal.aborted) setLoading(false); // 👈 Protect state
     }
-  };
+  }, [apiUrl, jobId]);
 
   useEffect(() => {
-    fetchPipeline();
-  }, [jobId]);
+    const controller = new AbortController();
+    fetchPipeline(controller.signal);
+    return () => controller.abort();
+  }, [fetchPipeline]);
 
   const handlePhase1Decision = async (appId, action) => {
     try {
@@ -58,13 +66,13 @@ function JobPipelinePage() {
     } catch (err) { alert("Action failed"); }
   };
 
-  if (loading) return <div className="dashboard-loading" style={{ height: '100vh' }}>Loading ATS Board...</div>;
-  if (!jobData) return null;
 
-  // --- READ ONLY LOGIC ---
-  const isExpired = new Date(jobData.dueDate) < new Date();
-  const isPendingApproval = !jobData.isApproved;
-  const isClosed = jobData.status === "closed";
+  // --- DELETE THE TWO EARLY RETURNS HERE ---
+
+  // --- SAFE READ ONLY LOGIC ---
+  const isExpired = jobData ? new Date(jobData.dueDate) < new Date() : false;
+  const isPendingApproval = jobData ? !jobData.isApproved : false;
+  const isClosed = jobData ? jobData.status === "closed" : false;
   const isReadOnly = isExpired || isPendingApproval || isClosed;
 
   let readOnlyReason = "";
@@ -72,15 +80,17 @@ function JobPipelinePage() {
   else if (isPendingApproval) readOnlyReason = "This job is currently pending approval from the college.";
   else if (isExpired) readOnlyReason = "This job's application deadline has passed.";
 
-  // Group applications into columns
+  // Group applications into columns safely
   const cols = { pending: [], mentorReview: [], interviewReady: [], finalized: [] };
   
-  jobData.applications.forEach(app => {
-    if (app.status === "pending") cols.pending.push(app);
-    else if (app.status === "shortlisted" && app.mentorApproval === "pending") cols.mentorReview.push(app);
-    else if (app.status === "shortlisted" && app.mentorApproval === "approved") cols.interviewReady.push(app);
-    else cols.finalized.push(app);
-  });
+  if (jobData?.applications) {
+    jobData.applications.forEach(app => {
+      if (app.status === "pending") cols.pending.push(app);
+      else if (app.status === "shortlisted" && app.mentorApproval === "pending") cols.mentorReview.push(app);
+      else if (app.status === "shortlisted" && app.mentorApproval === "approved") cols.interviewReady.push(app);
+      else cols.finalized.push(app);
+    });
+  }
 
   /* ---------------- COLUMN COMPONENT ---------------- */
   const Column = ({ title, color, apps, children }) => (
@@ -179,7 +189,7 @@ function JobPipelinePage() {
         overflow: 'hidden'
     }}>
       
-      {/* HEADER */}
+      {/* HEADER (Always visible) */}
       <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexShrink: 0, width: '100%', justifyContent: 'flex-start' }}>
         <button 
           onClick={() => navigate(-1)} 
@@ -189,99 +199,112 @@ function JobPipelinePage() {
         </button>
         <div style={{ minWidth: 0, flex: 1 }}>
           <h2 className="page-title" style={{ margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {jobData.title}
+            {jobData?.title || "Loading Job..."}
           </h2>
           <p className="page-subtitle" style={{ margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            Pipeline • {jobData.college.name}
+            Pipeline • {jobData?.college?.name || "..."}
           </p>
         </div>
       </div>
 
-      {/* READ ONLY BANNER */}
-      {isReadOnly && (
-        <div style={{ 
-          backgroundColor: '#fffbeb', color: '#854d0e', padding: '1rem', borderRadius: '8px', 
-          marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', 
-          border: '1px solid #fef08a', flexShrink: 0, fontSize: '0.9rem'
-        }}>
-          <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-          <div>
-            <strong>Read-Only Mode Active:</strong> {readOnlyReason} You can view applications, but cannot make hiring decisions.
-          </div>
+      {/* 👇 INLINE LOADING CHECK 👇 */}
+      {loading ? (
+        <div className="dashboard-loading" style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+           Loading ATS Board...
         </div>
-      )}
-
-      {/* KANBAN BOARD CONTAINER */}
-      <div style={{ 
-        display: 'flex', gap: '1.5rem', overflowX: 'auto', overflowY: 'hidden', 
-        flexGrow: 1, width: '100%', paddingBottom: '1rem', boxSizing: 'border-box', minWidth:0
-      }}>
-        
-        <Column title="New Applications" color="#eab308" apps={cols.pending}>
-          {(app) => (
-            <StudentCard key={app.id} app={app} renderActions={(a) => (
-              isReadOnly ? (
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>Actions disabled</span>
-              ) : (
-                <>
-                  <button onClick={() => handlePhase1Decision(a.id, "1")} style={{ flex: 1, padding: '8px', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-                    Shortlist
-                  </button>
-                  <button onClick={() => handlePhase1Decision(a.id, "0")} style={{ flex: 1, padding: '8px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-                    Reject
-                  </button>
-                </>
-              )
-            )} />
-          )}
-        </Column>
-
-        <Column title="Mentor Reviewing" color="#a855f7" apps={cols.mentorReview}>
-          {(app) => (
-            <StudentCard key={app.id} app={app} renderActions={() => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'center', padding: '4px' }}>
-                <span style={{ fontSize: '1rem' }}>⏳</span>
-                <span style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>Awaiting College Mentor</span>
+      ) : !jobData ? (
+        <div className="empty-state" style={{ padding: '3rem', textAlign: 'center', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
+           Job not found.
+        </div>
+      ) : (
+        <>
+          {/* READ ONLY BANNER */}
+          {isReadOnly && (
+            <div style={{ 
+              backgroundColor: '#fffbeb', color: '#854d0e', padding: '1rem', borderRadius: '8px', 
+              marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', 
+              border: '1px solid #fef08a', flexShrink: 0, fontSize: '0.9rem'
+            }}>
+              <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+              <div>
+                <strong>Read-Only Mode Active:</strong> {readOnlyReason} You can view applications, but cannot make hiring decisions.
               </div>
-            )} />
+            </div>
           )}
-        </Column>
 
-        <Column title="Interview & Final" color="#3b82f6" apps={cols.interviewReady}>
-          {(app) => (
-            <StudentCard key={app.id} app={app} renderActions={(a) => (
-              isReadOnly ? (
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>Actions disabled</span>
-              ) : (
-                <>
-                  <button onClick={() => handleFinalDecision(a.id, "hire")} style={{ flex: 1, padding: '8px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-                    Hire
-                  </button>
-                  <button onClick={() => handleFinalDecision(a.id, "reject")} style={{ flex: 1, padding: '8px', backgroundColor: '#f8fafc', color: '#ef4444', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-                    Reject
-                  </button>
-                </>
-              )
-            )} />
-          )}
-        </Column>
+          {/* KANBAN BOARD CONTAINER */}
+          <div style={{ 
+            display: 'flex', gap: '1.5rem', overflowX: 'auto', overflowY: 'hidden', 
+            flexGrow: 1, width: '100%', paddingBottom: '1rem', boxSizing: 'border-box', minWidth:0
+          }}>
+            
+            <Column title="New Applications" color="#eab308" apps={cols.pending}>
+              {(app) => (
+                <StudentCard key={app.id} app={app} renderActions={(a) => (
+                  isReadOnly ? (
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>Actions disabled</span>
+                  ) : (
+                    <>
+                      <button onClick={() => handlePhase1Decision(a.id, "1")} style={{ flex: 1, padding: '8px', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                        Shortlist
+                      </button>
+                      <button onClick={() => handlePhase1Decision(a.id, "0")} style={{ flex: 1, padding: '8px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                        Reject
+                      </button>
+                    </>
+                  )
+                )} />
+              )}
+            </Column>
 
-        <Column title="Finalized" color="#94a3b8" apps={cols.finalized}>
-          {(app) => (
-            <StudentCard key={app.id} app={app} renderActions={(a) => {
-              const isHired = a.status === "hired";
-              return (
-                <div style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '6px', backgroundColor: isHired ? '#dcfce7' : '#fee2e2' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: isHired ? '#166534' : '#991b1b' }}>
-                    {isHired ? "🎉 Hired Candidate" : "✕ Application Rejected"}
-                  </span>
-                </div>
-              );
-            }} />
-          )}
-        </Column>
+            <Column title="Mentor Reviewing" color="#a855f7" apps={cols.mentorReview}>
+              {(app) => (
+                <StudentCard key={app.id} app={app} renderActions={() => (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'center', padding: '4px' }}>
+                    <span style={{ fontSize: '1rem' }}>⏳</span>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>Awaiting College Mentor</span>
+                  </div>
+                )} />
+              )}
+            </Column>
 
-      </div>
+            <Column title="Interview & Final" color="#3b82f6" apps={cols.interviewReady}>
+              {(app) => (
+                <StudentCard key={app.id} app={app} renderActions={(a) => (
+                  isReadOnly ? (
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>Actions disabled</span>
+                  ) : (
+                    <>
+                      <button onClick={() => handleFinalDecision(a.id, "hire")} style={{ flex: 1, padding: '8px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                        Hire
+                      </button>
+                      <button onClick={() => handleFinalDecision(a.id, "reject")} style={{ flex: 1, padding: '8px', backgroundColor: '#f8fafc', color: '#ef4444', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                        Reject
+                      </button>
+                    </>
+                  )
+                )} />
+              )}
+            </Column>
+
+            <Column title="Finalized" color="#94a3b8" apps={cols.finalized}>
+              {(app) => (
+                <StudentCard key={app.id} app={app} renderActions={(a) => {
+                  const isHired = a.status === "hired";
+                  return (
+                    <div style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '6px', backgroundColor: isHired ? '#dcfce7' : '#fee2e2' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: isHired ? '#166534' : '#991b1b' }}>
+                        {isHired ? "🎉 Hired Candidate" : "✕ Application Rejected"}
+                      </span>
+                    </div>
+                  );
+                }} />
+              )}
+            </Column>
+
+          </div>
+        </>
+      )}
     </div>
   );
 }

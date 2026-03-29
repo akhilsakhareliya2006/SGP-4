@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { 
   FiSearch, FiFilter, FiUser, FiMail, FiBookOpen, 
   FiCalendar, FiFileText, FiAward, FiX, FiBriefcase, 
@@ -22,20 +22,30 @@ function MentorStudentsPage() {
   const [studentDetails, setStudentDetails] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const res = await apiFetch("/api/mentor/students");
-        setStudents(res.data?.data || res.data || []);
-      } catch (err) {
-        console.error("Failed to fetch students:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStudents();
+  // 👈 NEW: Ref to track active slide-in panel requests
+  const detailsAbortControllerRef = useRef(null);
+
+  /* ---------------- OPTIMIZED FETCH STUDENTS ---------------- */
+  const fetchStudents = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      const res = await apiFetch("/api/mentor/students", { signal });
+      setStudents(res.data?.data || res.data || []);
+    } catch (err) {
+      if (err.name === 'AbortError') return; // Pattern: Ignore aborts
+      console.error("Failed to fetch students:", err);
+    } finally {
+      if (!signal || !signal.aborted) setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchStudents(controller.signal);
+    return () => controller.abort(); // Cleanup on unmount
+  }, [fetchStudents]);
+
+  /* ---------------- FRONTEND SEARCH & FILTER ---------------- */
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
       const matchesSearch = 
@@ -52,19 +62,40 @@ function MentorStudentsPage() {
     return ["All", ...Array.from(branches)];
   }, [students]);
 
+  /* ---------------- OPTIMIZED STUDENT DETAILS FETCH ---------------- */
   const openStudentDetails = async (studentId) => {
     setSelectedStudentId(studentId);
     setDetailsLoading(true);
+
+    // Cancel previous pending details request if user clicks rapidly
+    if (detailsAbortControllerRef.current) {
+      detailsAbortControllerRef.current.abort();
+    }
+    
+    const controller = new AbortController();
+    detailsAbortControllerRef.current = controller;
+
     try {
-      const res = await apiFetch(`/api/mentor/student/${studentId}/history`);
+      const res = await apiFetch(`/api/mentor/student/${studentId}/history`, { signal: controller.signal });
       setStudentDetails(res.data?.data || res.data);
     } catch (err) {
+      if (err.name === 'AbortError') return;
       alert("Failed to load student history.");
       setSelectedStudentId(null);
     } finally {
-      setDetailsLoading(false);
+      // Only stop loading if THIS is still the active request
+      if (!controller.signal.aborted) setDetailsLoading(false);
     }
   };
+
+  /* ---------------- GLOBAL CLEANUP ---------------- */
+  useEffect(() => {
+    return () => {
+      if (detailsAbortControllerRef.current) {
+        detailsAbortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const renderBadge = (status) => {
     const style = { padding: '4px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid transparent' };
@@ -88,7 +119,7 @@ function MentorStudentsPage() {
         
         .modal-content { 
           width: 100%; 
-          max-width: 1200px; /* 👈 THE REQUESTED WIDTH */
+          max-width: 1200px; 
           background: #f8fafc; 
           height: 100%; 
           box-shadow: -20px 0 50px rgba(0,0,0,0.15); 
@@ -101,7 +132,7 @@ function MentorStudentsPage() {
         
         .history-grid {
           display: grid;
-          grid-template-columns: 350px 1fr; /* Sidebar + Main History Area */
+          grid-template-columns: 350px 1fr;
           gap: 2rem;
           padding: 2rem;
           height: calc(100% - 80px);
@@ -127,7 +158,33 @@ function MentorStudentsPage() {
             <p style={{ fontSize: '1.05rem', color: '#64748b', margin: 0 }}>Select a student to view their full 1200px expanded history panel.</p>
           </div>
 
-          {/* ... Search & Filter UI (Same as before) ... */}
+          {/* Search & Filter UI */}
+          <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flexGrow: 1, maxWidth: '400px' }}>
+              <FiSearch style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <input 
+                placeholder="Search by name or roll no..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+                style={{ width: '100%', padding: '12px 12px 12px 48px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '0.95rem' }} 
+              />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <FiFilter color="#94a3b8" />
+              <select className="filter-select" value={branchFilter} onChange={e => setBranchFilter(e.target.value)}>
+                {uniqueBranches.map(b => <option key={b} value={b}>{b === "All" ? "All Branches" : b}</option>)}
+              </select>
+              
+              <select className="filter-select" value={yearFilter} onChange={e => setYearFilter(e.target.value)}>
+                <option value="All">All Years</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
+            </div>
+          </div>
 
           <div style={{ overflowX: 'auto' }}>
             <table className="student-table">
@@ -168,7 +225,11 @@ function MentorStudentsPage() {
 
       {/* ================= 1200px WIDE SIDE PANEL ================= */}
       {selectedStudentId && (
-        <div className="modal-overlay" onClick={() => setSelectedStudentId(null)}>
+        <div className="modal-overlay" onClick={() => {
+            setSelectedStudentId(null);
+            // Cleanup on intentional close
+            if (detailsAbortControllerRef.current) detailsAbortControllerRef.current.abort();
+        }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             
             {/* Header */}
@@ -177,7 +238,15 @@ function MentorStudentsPage() {
                 <FiUser size={24} color="#4f46e5" />
                 <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Detailed Student Insights</h2>
               </div>
-              <button onClick={() => setSelectedStudentId(null)} style={{ background: '#f1f5f9', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer' }}><FiX size={20}/></button>
+              <button 
+                onClick={() => {
+                  setSelectedStudentId(null);
+                  if (detailsAbortControllerRef.current) detailsAbortControllerRef.current.abort();
+                }} 
+                style={{ background: '#f1f5f9', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer' }}
+              >
+                <FiX size={20}/>
+              </button>
             </div>
 
             {detailsLoading ? (
@@ -233,7 +302,7 @@ function MentorStudentsPage() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                      {studentDetails.applications.map(app => (
+                      {studentDetails.applications?.map(app => (
                         <div key={app.id} style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                             <div>

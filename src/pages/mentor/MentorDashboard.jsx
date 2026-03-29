@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { 
   FiUsers, FiCheckSquare, FiBriefcase, FiTrendingUp, 
@@ -9,6 +9,7 @@ import { apiFetch } from "../../utils/api";
 function MentorDashboard() {
   const { mentor } = useOutletContext();
   const navigate = useNavigate();
+  
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -18,50 +19,57 @@ function MentorDashboard() {
   });
   const [recentActivities, setRecentActivities] = useState([]);
 
-  useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        // Fetching data from your existing endpoints
-        const [studentsRes, jobsRes, approvalsRes] = await Promise.all([
-          apiFetch("/api/mentor/students"),
-          apiFetch("/api/mentor/jobs?filter=current"),
-          apiFetch("/api/mentor/jobs-with-applications") // Using the combined endpoint we created
-        ]);
+  /* ---------------- OPTIMIZED FETCH PATTERN ---------------- */
+  const fetchDashboardStats = useCallback(async (signal) => {
+    try {
+      // Pass the signal to all concurrent fetch requests
+      const [studentsRes, jobsRes, approvalsRes] = await Promise.all([
+        apiFetch("/api/mentor/students", { signal }),
+        apiFetch("/api/mentor/jobs?filter=current", { signal }),
+        apiFetch("/api/mentor/jobs-with-applications", { signal })
+      ]);
 
-        const studentData = studentsRes.data?.data || [];
-        const jobsData = jobsRes.data?.data?.jobs || [];
-        const approvalData = approvalsRes.data?.data || [];
+      const studentData = studentsRes.data?.data || [];
+      const jobsData = jobsRes.data?.data?.jobs || [];
+      const approvalData = approvalsRes.data?.data || [];
 
-        // Calculate pending approvals count
-        const pendingCount = approvalData.reduce((acc, job) => {
-          return acc + (job.applications?.filter(a => a.mentorApproval === 'pending').length || 0);
-        }, 0);
+      // Calculate pending approvals count
+      const pendingCount = approvalData.reduce((acc, job) => {
+        return acc + (job.applications?.filter(a => a.mentorApproval === 'pending').length || 0);
+      }, 0);
 
-        setStats({
-          totalStudents: studentData.length,
-          activeJobs: jobsData.length,
-          pendingApprovals: pendingCount,
-          placedStudents: 0 // This would come from an analytics endpoint
-        });
+      setStats({
+        totalStudents: studentData.length,
+        activeJobs: jobsData.length,
+        pendingApprovals: pendingCount,
+        placedStudents: 0 // This would come from an analytics endpoint
+      });
 
-        // Mock recent activity based on real data
-        setRecentActivities([
-          { id: 1, type: 'approval', text: '3 new applications for Software Engineer role', time: '10 mins ago' },
-          { id: 2, type: 'student', text: 'Student Rahul Sharma updated his resume', time: '1 hour ago' },
-          { id: 3, type: 'job', text: 'New job posted by Google Cloud', time: '4 hours ago' },
-        ]);
+      // Mock recent activity based on real data
+      setRecentActivities([
+        { id: 1, type: 'approval', text: '3 new applications for Software Engineer role', time: '10 mins ago' },
+        { id: 2, type: 'student', text: 'Student Rahul Sharma updated his resume', time: '1 hour ago' },
+        { id: 3, type: 'job', text: 'New job posted by Google Cloud', time: '4 hours ago' },
+      ]);
 
-      } catch (err) {
-        console.error("Dashboard Stats Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardStats();
+    } catch (err) {
+      if (err.name === 'AbortError') return; // Pattern: Ignore intentional aborts
+      console.error("Dashboard Stats Error:", err);
+    } finally {
+      // Pattern: Only stop loading if this is the active request
+      if (!signal || !signal.aborted) setLoading(false);
+    }
   }, []);
 
-  if (loading) return <div className="dashboard-loading">Loading Analytics...</div>;
+  // Trigger effect with strictly isolated cleanup
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchDashboardStats(controller.signal);
+    
+    return () => controller.abort(); // Instantly kill all 3 requests if user navigates away
+  }, [fetchDashboardStats]);
+
+  if (loading) return <div className="dashboard-loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading Analytics...</div>;
 
   return (
     <>
@@ -94,7 +102,7 @@ function MentorDashboard() {
         {/* Welcome Header */}
         <div style={{ marginBottom: '2.5rem' }}>
           <h1 style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-            Hello, {mentor?.name?.split(" ")[0]}! 👋
+            Hello, {mentor?.name?.split(" ")[0] || "Mentor"}! 👋
           </h1>
           <p style={{ color: '#64748b', fontSize: '1.1rem', marginTop: '4px' }}>
             Here is what's happening in your college placement cell today.

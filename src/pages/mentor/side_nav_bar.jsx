@@ -32,6 +32,8 @@ function MentorSideNavBar() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const controller = new AbortController(); // 👈 Add controller
+    
     const fetchUser = async () => {
       try {
         console.log(`👉 Mentor Nav Fetching: ${apiUrl}/api/auth/me`);
@@ -41,25 +43,29 @@ function MentorSideNavBar() {
             "Content-Type": "application/json",
           },
           credentials: "include",
+          signal: controller.signal // 👈 Attach signal
         });
 
         if (res.ok) {
           const data = await res.json();
-          console.log("👉 Mentor Nav Data:", data);
           setMentor(data.data || data.user || data);
         } else {
-          console.error("👉 Mentor Nav: Not authenticated! Redirecting to login...");
           navigate("/login");
         }
       } catch (error) {
+        if (error.name === 'AbortError') return; // 👈 Ignore aborts
         console.error("👉 Mentor Nav: Failed to fetch user:", error);
         navigate("/login");
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+            setIsLoading(false); // 👈 Only stop loading if active
+        }
       }
     };
 
     fetchUser();
+    
+    return () => controller.abort(); // 👈 Cleanup
   }, [navigate, apiUrl]);
 
   const handleLogout = async (e) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { 
   FiSearch, FiMapPin, FiDollarSign, FiCalendar, 
   FiBriefcase, FiChevronDown, FiChevronUp, FiClock, 
@@ -20,39 +20,59 @@ function MentorJobsPage() {
   const [expandedJobData, setExpandedJobData] = useState({});
   const [processingId, setProcessingId] = useState(null);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      setLoading(true);
-      try {
-        const res = await apiFetch(`/api/mentor/jobs?filter=${activeFilter}&limit=100`);
-        const fetchedJobs = res.data?.data?.jobs || res.data?.jobs || [];
-        setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
-      } catch (err) {
-        console.error("Failed to fetch jobs:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobs();
+  // 👈 NEW: Ref to track the active expand request to prevent race conditions
+  const expandAbortControllerRef = useRef(null);
+
+  /* ---------------- OPTIMIZED FETCH JOBS ---------------- */
+  const fetchJobs = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      const res = await apiFetch(`/api/mentor/jobs?filter=${activeFilter}&limit=100`, { signal });
+      const fetchedJobs = res.data?.data?.jobs || res.data?.jobs || [];
+      setJobs(Array.isArray(fetchedJobs) ? fetchedJobs : []);
+    } catch (err) {
+      if (err.name === 'AbortError') return; // Pattern: Ignore aborted requests
+      console.error("Failed to fetch jobs:", err);
+    } finally {
+      if (!signal || !signal.aborted) setLoading(false);
+    }
   }, [activeFilter]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchJobs(controller.signal);
+    return () => controller.abort();
+  }, [fetchJobs]);
+
+  /* ---------------- OPTIMIZED TOGGLE EXPAND ---------------- */
   const toggleExpand = async (jobId) => {
     if (expandedJobId === jobId) {
       setExpandedJobId(null);
+      // Cancel any pending request if they close the tab quickly
+      if (expandAbortControllerRef.current) expandAbortControllerRef.current.abort();
       return;
     }
+    
     setExpandedJobId(jobId);
 
     if (!expandedJobData[jobId]) {
+      // Cancel previous pending expand request if user clicks rapidly
+      if (expandAbortControllerRef.current) expandAbortControllerRef.current.abort();
+      
+      const controller = new AbortController();
+      expandAbortControllerRef.current = controller;
+
       try {
-        const res = await apiFetch(`/api/mentor/job/${jobId}`);
+        const res = await apiFetch(`/api/mentor/job/${jobId}`, { signal: controller.signal });
         setExpandedJobData(prev => ({ ...prev, [jobId]: res.data?.data || res.data }));
       } catch (err) {
+        if (err.name === 'AbortError') return;
         console.error("Error fetching job details:", err);
       }
     }
   };
 
+  /* ---------------- HANDLE DECISION ---------------- */
   const handleDecision = async (jobId, applicationId, decision) => {
     setProcessingId(applicationId);
     try {
@@ -66,11 +86,16 @@ function MentorJobsPage() {
         const job = prev[jobId];
         if (!job) return prev;
         const updatedJob = { ...job };
-        Object.keys(updatedJob.applications).forEach(group => {
-          updatedJob.applications[group] = updatedJob.applications[group].map(app => 
-            app.id === applicationId ? { ...app, mentorApproval: decision } : app
-          );
-        });
+        
+        // Ensure applications exist before iterating
+        if (updatedJob.applications) {
+          Object.keys(updatedJob.applications).forEach(group => {
+            updatedJob.applications[group] = updatedJob.applications[group].map(app => 
+              app.id === applicationId ? { ...app, mentorApproval: decision } : app
+            );
+          });
+        }
+        
         return { ...prev, [jobId]: updatedJob };
       });
     } catch (err) {
@@ -86,6 +111,15 @@ function MentorJobsPage() {
       job.company?.name?.toLowerCase().includes(search.toLowerCase())
     );
   }, [jobs, search]);
+
+  /* ================= CLEANUP ON UNMOUNT ================= */
+  useEffect(() => {
+    return () => {
+      if (expandAbortControllerRef.current) {
+        expandAbortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return (
     <>

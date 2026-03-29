@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { 
   FiChevronDown, FiChevronUp, FiCheckCircle, FiXCircle, 
   FiClock, FiSearch, FiFileText, FiMapPin, FiExternalLink, FiLock
@@ -16,36 +16,49 @@ function MentorApprovalsPage() {
   
   const [processingId, setProcessingId] = useState(null);
 
-  // --- 1. FETCH INITIAL JOBS LIST ---
-  useEffect(() => {
-    const fetchJobsList = async () => {
-      try {
-        // Uses your existing getAllJobs endpoint
-        const res = await apiFetch("/api/mentor/jobs?filter=current");
-        const fetchedJobs = res.data?.data?.jobs || res.data?.jobs || [];
-        setJobs(fetchedJobs);
-      } catch (err) {
-        console.error("Failed to fetch jobs:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobsList();
+  // 👈 NEW: Ref to track active expand requests
+  const expandAbortControllerRef = useRef(null);
+
+  // --- 1. OPTIMIZED FETCH INITIAL JOBS LIST ---
+  const fetchJobsList = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      const res = await apiFetch("/api/mentor/jobs?filter=current", { signal });
+      const fetchedJobs = res.data?.data?.jobs || res.data?.jobs || [];
+      setJobs(fetchedJobs);
+    } catch (err) {
+      if (err.name === 'AbortError') return; // Pattern: Ignore aborts
+      console.error("Failed to fetch jobs:", err);
+    } finally {
+      if (!signal || !signal.aborted) setLoading(false);
+    }
   }, []);
 
-  // --- 2. FETCH JOB DETAILS ON EXPAND ---
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchJobsList(controller.signal);
+    return () => controller.abort(); // Cleanup on unmount
+  }, [fetchJobsList]);
+
+  // --- 2. OPTIMIZED FETCH JOB DETAILS ON EXPAND ---
   const toggleExpand = async (jobId) => {
     if (expandedJobId === jobId) {
       setExpandedJobId(null);
+      if (expandAbortControllerRef.current) expandAbortControllerRef.current.abort();
       return;
     }
 
     setExpandedJobId(jobId);
 
-    // Only fetch if we don't already have the details for this job
     if (!expandedJobData[jobId]) {
+      // Cancel previous pending expand request if user clicks rapidly
+      if (expandAbortControllerRef.current) expandAbortControllerRef.current.abort();
+      
+      const controller = new AbortController();
+      expandAbortControllerRef.current = controller;
+
       try {
-        const res = await apiFetch(`/api/mentor/job/${jobId}`);
+        const res = await apiFetch(`/api/mentor/job/${jobId}`, { signal: controller.signal });
         const jobDetails = res.data?.data || res.data;
         
         setExpandedJobData(prev => ({
@@ -53,6 +66,7 @@ function MentorApprovalsPage() {
           [jobId]: jobDetails
         }));
       } catch (err) {
+        if (err.name === 'AbortError') return;
         console.error("Failed to fetch job details:", err);
       }
     }
@@ -62,25 +76,24 @@ function MentorApprovalsPage() {
   const handleDecision = async (jobId, applicationId, decision) => {
     setProcessingId(applicationId);
     try {
-      // Matches your makeStudentApplicationDecision backend API
       await apiFetch(`/api/mentor/application/${applicationId}/decision`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result: decision }), // Backend expects { result: "approved" | "rejected" }
+        body: JSON.stringify({ result: decision }), 
       });
 
-      // Update local state to show the new status immediately
       setExpandedJobData(prev => {
         const job = prev[jobId];
         if (!job) return prev;
 
         const updatedJob = { ...job };
-        // Your backend groups applications by status (pending, shortlisted, etc.)
-        Object.keys(updatedJob.applications).forEach(group => {
-          updatedJob.applications[group] = updatedJob.applications[group].map(app => 
-            app.id === applicationId ? { ...app, mentorApproval: decision } : app
-          );
-        });
+        if (updatedJob.applications) {
+          Object.keys(updatedJob.applications).forEach(group => {
+            updatedJob.applications[group] = updatedJob.applications[group].map(app => 
+              app.id === applicationId ? { ...app, mentorApproval: decision } : app
+            );
+          });
+        }
 
         return { ...prev, [jobId]: updatedJob };
       });
@@ -92,10 +105,13 @@ function MentorApprovalsPage() {
     }
   };
 
-  const filteredJobs = jobs.filter(job => 
-    job.title?.toLowerCase().includes(search.toLowerCase()) || 
-    job.company?.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  // 👈 OPTIMIZATION: useMemo prevents recalculating this array on every re-render
+  const filteredJobs = useMemo(() => {
+    return jobs.filter(job => 
+      job.title?.toLowerCase().includes(search.toLowerCase()) || 
+      job.company?.name?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [jobs, search]);
 
   const renderStatusBadge = (status) => {
     switch (status) {
@@ -104,6 +120,15 @@ function MentorApprovalsPage() {
       default: return <span className="badge badge-warning"><FiClock /> Pending</span>;
     }
   };
+
+  // 👈 NEW: Global cleanup for unmounting while accordions are loading
+  useEffect(() => {
+    return () => {
+      if (expandAbortControllerRef.current) {
+        expandAbortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   if (loading) return <div className="dashboard-loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading assigned jobs...</div>;
 
